@@ -1,7 +1,11 @@
-import React from "react";
+import { Outlet } from "react-router-dom";
 
 const LoginLayout = () => {
-  return <div>LoginLayout</div>;
+  return (
+    <div className="flex flex-col w-screen h-screen">
+      <Outlet />
+    </div>
+  );
 };
 
 export default LoginLayout;

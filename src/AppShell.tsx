@@ -1,5 +1,4 @@
 import clsx from "clsx";
-import React from "react";
 import { Outlet } from "react-router-dom";
 import ToastContainer from "./widgets/toast/ToastContainer";
 

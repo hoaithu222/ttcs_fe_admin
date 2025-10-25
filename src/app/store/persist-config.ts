@@ -6,6 +6,6 @@ import { rootReducer } from "./root-reducer";
 export const persistConfig: PersistConfig<ReturnType<typeof rootReducer>> = {
   key: "root",
   storage,
-  // Không add key ở đây, nếu cần đồng bộ với local thì thêm ở từng feature thêm whitelist ở đó
-  whitelist: [],
+  // Bao gồm auth slice để persist authentication state
+  whitelist: ["auth"],
 };
