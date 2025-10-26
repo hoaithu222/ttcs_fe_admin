@@ -16,11 +16,11 @@ const AppShell = () => {
   return (
     <div
       className={clsx(
-        "box-border flex min-h-screen w-screen flex-col rounded-lg bg-background-base text-center "
+        "box-border flex flex-col w-screen min-h-screen text-center rounded-lg bg-background-base"
       )}
     >
       {/* Outlet se được render layout tương ứng với router hiện tại (main,login,extension) */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex overflow-hidden flex-col flex-1">
         <Outlet />
       </div>
       {/* Các Modal,Toast,Dialog,Tooltip,Popover, sẽ được render ở đây */}

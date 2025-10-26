@@ -10,11 +10,12 @@ import type {
   ApiSuccess,
 } from "./type";
 import { VpsHttpClient } from "@/core/base/http-client";
+import { API_BASE_URL } from "@/app/config/env.config";
 
 // Analytics API service
 class AnalyticsApiService extends VpsHttpClient {
   constructor() {
-    super(process.env.REACT_APP_API_BASE_URL || "");
+    super(API_BASE_URL);
   }
 
   // Get admin revenue statistics

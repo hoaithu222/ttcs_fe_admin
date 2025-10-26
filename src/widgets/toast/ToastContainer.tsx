@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { CheckCircle2, XCircle, AlertTriangle, Info, X } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { selectToastMessages } from "@/app/store/slices/toast";
 import { removeToast } from "@/app/store/slices/toast";
@@ -25,30 +26,30 @@ const ToastContainer = () => {
   const getToastStyles = (type: string) => {
     switch (type) {
       case "success":
-        return "bg-green-500 text-white border-green-600";
+        return "bg-success text-neutral-0 border-success";
       case "error":
-        return "bg-red-500 text-white border-red-600";
+        return "bg-error text-neutral-0 border-error";
       case "warning":
-        return "bg-yellow-500 text-white border-yellow-600";
+        return "bg-warning text-neutral-0 border-warning";
       case "info":
-        return "bg-blue-500 text-white border-blue-600";
+        return "bg-primary-6 text-neutral-0 border-primary-6";
       default:
-        return "bg-gray-500 text-white border-gray-600";
+        return "bg-neutral-7 text-neutral-0 border-neutral-7";
     }
   };
 
   const getToastIcon = (type: string) => {
     switch (type) {
       case "success":
-        return "✓";
+        return <CheckCircle2 className="w-5 h-5" />;
       case "error":
-        return "✕";
+        return <XCircle className="w-5 h-5" />;
       case "warning":
-        return "⚠";
+        return <AlertTriangle className="w-5 h-5" />;
       case "info":
-        return "ℹ";
+        return <Info className="w-5 h-5" />;
       default:
-        return "•";
+        return <Info className="w-5 h-5" />;
     }
   };
 
@@ -68,13 +69,13 @@ const ToastContainer = () => {
             ${getToastStyles(toast.type)}
           `}
         >
-          <span className="text-lg font-bold">{getToastIcon(toast.type)}</span>
+          <div className="flex-shrink-0">{getToastIcon(toast.type)}</div>
           <span className="flex-1 text-sm font-medium">{toast.message}</span>
           <button
             onClick={() => dispatch(removeToast(toast.id))}
-            className="text-white hover:text-gray-200 transition-colors"
+            className="flex-shrink-0 p-1 rounded transition-colors text-neutral-0 hover:text-neutral-2 hover:bg-neutral-8/20"
           >
-            <span className="text-lg">×</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
       ))}

@@ -10,11 +10,12 @@ import type {
   ApiSuccess,
 } from "./type";
 import { VpsHttpClient } from "@/core/base/http-client";
+import { API_BASE_URL } from "@/app/config/env.config";
 
 // Categories API service
 class CategoriesApiService extends VpsHttpClient {
   constructor() {
-    super(process.env.REACT_APP_API_BASE_URL || "");
+    super(API_BASE_URL);
   }
 
   // Get categories list

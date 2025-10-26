@@ -1,11 +1,12 @@
 import { WISHLIST_ENDPOINTS, buildEndpoint } from "./path";
 import type { Wishlist, AddToWishlistRequest, WishlistResponse, ApiSuccess } from "./type";
 import { VpsHttpClient } from "@/core/base/http-client";
+import { API_BASE_URL } from "@/app/config/env.config";
 
 // Wishlist API service
 class WishlistApiService extends VpsHttpClient {
   constructor() {
-    super(process.env.REACT_APP_API_BASE_URL || "");
+    super(API_BASE_URL);
   }
 
   // Get wishlist

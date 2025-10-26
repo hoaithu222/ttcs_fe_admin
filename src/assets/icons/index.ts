@@ -1,7 +1,10 @@
-import logo from "./logo.png";
 import SearchIcon from "./search";
+import searchIcon from "./search-square-svgrepo-com.svg";
+import closeIcon from "./icons8-close.svg";
 
 export const icons = {
-  logo,
   search: SearchIcon,
+  searchSquare: searchIcon,
+  close: closeIcon,
+  CloseOutlined: closeIcon, // Add CloseOutlined alias
 };

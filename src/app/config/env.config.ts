@@ -7,7 +7,7 @@ export const ENV_CONFIG = {
   API_TIMEOUT: Number(import.meta.env.VITE_API_TIMEOUT) || 30000,
 
   // App Configuration
-  APP_NAME: import.meta.env.VITE_APP_NAME || "Client User",
+  APP_NAME: import.meta.env.VITE_APP_NAME || "Client Admin",
   APP_VERSION: import.meta.env.VITE_APP_VERSION || "1.0.0",
   APP_ENV: import.meta.env.VITE_APP_ENV || "development",
 
