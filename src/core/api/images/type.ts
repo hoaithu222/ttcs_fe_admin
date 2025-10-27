@@ -58,8 +58,12 @@ export interface ImageListResponse {
 }
 
 export interface UploadResponse {
-  image: Image;
-  uploadUrl?: string;
+  url: string;
+  publicId?: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  bytes?: number;
 }
 
 // API response wrapper

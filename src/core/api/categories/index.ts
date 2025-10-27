@@ -1,11 +1,9 @@
 import { CATEGORIES_ENDPOINTS, buildEndpoint } from "./path";
 import type {
   Category,
-  SubCategory,
   CreateCategoryRequest,
   UpdateCategoryRequest,
   CategoryListQuery,
-  CategoryListResponse,
   SubCategoryListResponse,
   ApiSuccess,
 } from "./type";
@@ -19,7 +17,7 @@ class CategoriesApiService extends VpsHttpClient {
   }
 
   // Get categories list
-  async getCategories(query?: CategoryListQuery): Promise<ApiSuccess<CategoryListResponse>> {
+  async getCategories(query?: CategoryListQuery): Promise<ApiSuccess<Category[]>> {
     const response = await this.get(CATEGORIES_ENDPOINTS.LIST, { params: query });
     return response.data;
   }

@@ -5,7 +5,7 @@ const AuthPage = lazy(() => import("@/features/Auth/AuthPage"));
 const DashboardPage = lazy(() => import("@/features/Dashboard/DashboardPage"));
 const UsersPage = lazy(() => import("@/features/Users/UsersPage"));
 const ProductsPage = lazy(() => import("@/features/Products/ProductsPage"));
-
+const CategoriesPage = lazy(() => import("@/features/Category/page/CategoryPage"));
 const defaultOptions = {
   requireAuth: false,
   hideInMenu: false,
@@ -43,6 +43,12 @@ export const ROUTE = {
   products: {
     path: NAVIGATION_CONFIG.products.path,
     element: <ProductsPage />,
+    layout: "main",
+    options: defaultAuthOptions,
+  },
+  categories: {
+    path: NAVIGATION_CONFIG.categories.path,
+    element: <CategoriesPage />,
     layout: "main",
     options: defaultAuthOptions,
   },

@@ -1,33 +1,40 @@
-// Category types
+// Category types matching backend model
 export interface Category {
   _id: string;
   name: string;
   description?: string;
-  image?: string;
-  slug: string;
-  parentId?: string;
+  image?: Array<{ url: string; publicId: string }>;
+  image_Background?: { url: string; publicId: string };
+  image_Icon?: { url: string; publicId: string };
   isActive: boolean;
-  sortOrder: number;
+  order_display: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface SubCategory extends Category {
-  parentId: string;
+  categoryId: string;
 }
 
 // Request types
 export interface CreateCategoryRequest {
   name: string;
   description?: string;
-  image?: string;
-  parentId?: string;
+  image?: Array<{ url: string; publicId: string }>;
+  image_Background?: { url: string; publicId: string };
+  image_Icon?: { url: string; publicId: string };
   isActive?: boolean;
-  sortOrder?: number;
+  order_display?: number;
 }
 
-export interface UpdateCategoryRequest extends Partial<CreateCategoryRequest> {
-  _id: string;
+export interface UpdateCategoryRequest {
+  name?: string;
+  description?: string;
+  image?: Array<{ url: string; publicId: string }>;
+  image_Background?: { url: string; publicId: string };
+  image_Icon?: { url: string; publicId: string };
+  isActive?: boolean;
+  order_display?: number;
 }
 
 export interface CategoryListQuery {
@@ -35,9 +42,6 @@ export interface CategoryListQuery {
   limit?: number;
   search?: string;
   isActive?: boolean;
-  parentId?: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
 }
 
 // Response types

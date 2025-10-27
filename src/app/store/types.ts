@@ -33,6 +33,22 @@ export interface RootState {
       duration?: number;
     }>;
   };
+  category: {
+    categories: Array<any>;
+    selectedCategory: any | null;
+    isLoading: boolean;
+    error: string | null;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+    filters: {
+      search: string;
+      isActive: boolean | undefined;
+    };
+  };
 }
 
 export enum ReduxStateType {
@@ -48,6 +64,7 @@ export const AppReducerType = {
   THEME: "theme",
   AUTH: "auth",
   TOAST: "toast",
+  CATEGORY: "category",
 } as const;
 
 export type AppReducerTypeKeys = keyof typeof AppReducerType;

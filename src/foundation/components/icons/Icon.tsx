@@ -64,7 +64,6 @@ const Icon: React.FC<IconProps> = ({
     "data-testid": dataTestId || testId,
     onKeyDown,
     tabIndex,
-    key,
     ...rest,
   };
 

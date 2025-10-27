@@ -165,7 +165,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     const { t: tCommon } = useTranslation("common");
 
     const contentStyles = clsx(
-      "shadow-1 fixed left-1/2 top-1/2 z-50 flex origin-center -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-neutral-2 bg-background-popup focus:outline-none",
+      "shadow-1 fixed left-1/2 top-1/2 z-50 flex origin-center -translate-x-1/2 border-divider-1 -translate-y-1/2 flex-col rounded-xl border bg-background-2 focus:outline-none",
       sizeClasses[size],
       contentClassName,
       padding
@@ -179,7 +179,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       if (!shouldRenderWrapper) return null;
 
       return (
-        <div className={clsx("flex items-center justify-between gap-4", headerPadding)}>
+        <div className={clsx("flex gap-4 justify-between items-center", headerPadding)}>
           {/* Title bên trái */}
           <div className="flex-1">
             {hasCustomTitle ? (
@@ -282,9 +282,9 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
             <div className={clsx("flex-1", hideFooter && "mb-4", className)}>{children}</div>
             {!hideFooter &&
               (footer ? (
-                <div className={clsx("mt-6 flex justify-end gap-2", footerClassName)}>{footer}</div>
+                <div className={clsx("flex gap-2 justify-end mt-6", footerClassName)}>{footer}</div>
               ) : onCancel || onConfirm ? (
-                <div className="flex justify-end w-full gap-2 mt-6">
+                <div className="flex gap-2 justify-end mt-6 w-full">
                   {onCancel && (
                     <Dialog.Close asChild>
                       <Button

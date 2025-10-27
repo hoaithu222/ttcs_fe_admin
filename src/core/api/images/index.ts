@@ -37,10 +37,7 @@ class ImagesApiService extends VpsHttpClient {
   }
 
   // Upload image file
-  async uploadImage(
-    file: File,
-    metadata?: Partial<CreateImageRequest>
-  ): Promise<ApiSuccess<UploadResponse>> {
+  async uploadImage(file: File, metadata?: Partial<CreateImageRequest>): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -57,7 +54,9 @@ class ImagesApiService extends VpsHttpClient {
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data;
+    // Backend returns { success, data: { url, publicId, ... } }
+    // Extract data from wrapped response
+    return response.data.data;
   }
 
   // Update image

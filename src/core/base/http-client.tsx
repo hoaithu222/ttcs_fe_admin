@@ -7,9 +7,6 @@ import axios, {
 import { v4 as uuidv4 } from "uuid";
 
 import { MODE, API_TIMEOUT } from "@/app/config/env.config";
-import { AUTH_ENDPOINTS, OTP_ENDPOINTS } from "@/core/api/auth/path";
-import { PRODUCTS_ENDPOINTS } from "@/core/api/products/path";
-import { authApi } from "@/core/api/auth";
 import { toastUtils } from "@/shared/utils/toast.utils";
 
 // Logout function - clear tokens and redirect
@@ -101,11 +98,16 @@ export abstract class VpsHttpClient {
   private readonly maxRetryDurationMs = 2000; // tối đa 2 giây retry tổng
 
   constructor(baseURL: string) {
+    if (!baseURL) {
+      throw new Error("VpsHttpClient requires a valid baseURL");
+    }
+
     this.instance = axios.create({
       baseURL,
       headers: { "Content-Type": "application/json" },
       timeout: API_TIMEOUT,
     });
+
     this.initializeInterceptors();
   }
 
@@ -115,11 +117,18 @@ export abstract class VpsHttpClient {
 
   /** ----- Interceptors ----- */
   private initializeInterceptors() {
-    this.instance.interceptors.request.use(this.handleRequest, this.handleRequestError);
-    this.instance.interceptors.response.use(this.handleResponse, this.handleResponseError);
+    // Bind methods to ensure proper 'this' context
+    this.instance.interceptors.request.use(
+      (req: MetaConfig) => this.handleRequest(req),
+      (error: any) => this.handleRequestError(error)
+    );
+    this.instance.interceptors.response.use(
+      (response: AxiosResponse<any>) => this.handleResponse(response),
+      (error: any) => this.handleResponseError(error)
+    );
   }
 
-  private handleRequest = (req: MetaConfig): MetaConfig => {
+  private handleRequest(req: MetaConfig): MetaConfig {
     const headers = new axios.AxiosHeaders(req.headers);
     headers.set("x-request-id", uuidv4());
     headers.set("accept-language", localStorage.getItem("i18nextLng") || "vi");
@@ -128,31 +137,26 @@ export abstract class VpsHttpClient {
     const accessToken = tokenStorage.getAccessToken();
     if (accessToken) {
       headers.set("Authorization", `Bearer ${accessToken}`);
+      if (MODE === "dev") {
+        console.log(`[VpsHttpClient] Adding Authorization header for ${req.method} ${req.url}`);
+      }
+    } else {
+      console.warn(`[VpsHttpClient] No access token found for ${req.method} ${req.url}`);
     }
 
     req.headers = headers;
     req.metadata = { startTime: Date.now(), retryStartTime: Date.now() };
     return req;
-  };
+  }
 
-  private handleRequestError = (error: any) => {
+  private handleRequestError(error: any) {
     if (MODE === "dev") {
       console.error("[VpsHttpClient] Request error:", error);
     }
     return Promise.reject(error);
-  };
-
-  private shouldBypassRcValidation(url: string | undefined): boolean {
-    if (!url) return false;
-    // Bypass RC validation for auth, OTP, and products endpoints
-    return (
-      Object.values(AUTH_ENDPOINTS).some((path) => url === path) ||
-      Object.values(OTP_ENDPOINTS).some((path) => url === path) ||
-      Object.values(PRODUCTS_ENDPOINTS).some((path) => url.includes(path.replace(":id", "")))
-    );
   }
 
-  private handleResponse = (response: AxiosResponse<any>): AxiosResponse<any> => {
+  private handleResponse(response: AxiosResponse<any>): AxiosResponse<any> {
     const { config, data } = response;
     const { url } = config as MetaConfig;
 
@@ -161,52 +165,61 @@ export abstract class VpsHttpClient {
       console.log(`[API Response] ${config.method?.toUpperCase()} ${url}:`, data);
     }
 
-    // Handle dummy data
-    if (data?.data?.[0]?.DUMMY === "X") {
-      throw this.createError(response, {
-        code: "ERROR_DUMMY_DATA",
-        name: "ERROR_DUMMY_DATA",
-        userMessage: "Dữ liệu không hợp lệ",
-      });
-    }
+    // Check if response has error structure
+    if (!data.success && data.success !== false) {
+      // Old format with 'rc' field - normalize for backward compatibility
+      const responseCode = data.code ?? data.rc;
 
-    // Handle special RC codes
-    if (data?.rc === -6017) {
-      response.data = normalizeNullStringsDeep(response.data);
-      data.rc = 1;
-      return response;
-    }
+      // If response code exists and not success (1), treat as error
+      if (responseCode !== undefined && responseCode !== 1) {
+        const errorMessage = data.message || data.rs || `Có lỗi xảy ra (${responseCode})`;
+        const commonError = this.createError(response, {
+          code: `ERROR_${responseCode}`,
+          name: `ERROR_${responseCode}`,
+          userMessage: errorMessage,
+        });
 
-    // RC validation (bypass for auth endpoints)
-    if (!this.shouldBypassRcValidation(url) && data?.rc !== 1) {
-      const isInvalidSession = data.rs === "FOException.InvalidSessionException";
+        const isInvalidSession =
+          data.message === "FOException.InvalidSessionException" ||
+          data.rs === "FOException.InvalidSessionException";
 
-      if (isInvalidSession) {
-        setTimeout(() => {
-          logoutRequest();
-        }, 100);
+        if (isInvalidSession) {
+          setTimeout(() => {
+            logoutRequest();
+          }, 100);
+        } else {
+          toastUtils.error(errorMessage);
+        }
+
+        throw commonError;
       }
+    }
 
-      const errorMessage = data.rs || `Có lỗi xảy ra (${data.rc})`;
+    // Check for error responses with success: false
+    if (data.success === false) {
+      const errorMessage = data.message || "Có lỗi xảy ra";
+      const errorCode = data.code || 0;
+
       const commonError = this.createError(response, {
-        code: `ERROR_${data.rc}`,
-        name: `ERROR_${data.rc}`,
+        code: `ERROR_${errorCode}`,
+        name: `ERROR_${errorCode}`,
         userMessage: errorMessage,
       });
 
-      if (!isInvalidSession) {
+      // Don't show toast if skipToast flag is set
+      if (!data.skipToast) {
         toastUtils.error(errorMessage);
       }
 
       throw commonError;
     }
 
-    // Normalize response data
+    // Normalize response data for successful responses
     response.data = normalizeNullStringsDeep(response.data);
     return response;
-  };
+  }
 
-  private handleResponseError = async (error: any) => {
+  private async handleResponseError(error: any) {
     const { response, config } = error;
     const originalRequest = config as MetaConfig;
 
@@ -262,6 +275,9 @@ export abstract class VpsHttpClient {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
+            if (!this.instance) {
+              throw new Error("Cannot retry queued request: instance is null");
+            }
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return this.instance.request(originalRequest);
           })
@@ -280,7 +296,8 @@ export abstract class VpsHttpClient {
           throw new Error("No refresh token available");
         }
 
-        // Call refresh token API
+        // Call refresh token API - dynamic import to avoid circular dependency
+        const { authApi } = await import("@/core/api/auth");
         const response = await authApi.refreshToken(refreshToken);
         const refreshData = response.data;
 
@@ -300,6 +317,9 @@ export abstract class VpsHttpClient {
         processQueue(null, accessToken);
 
         // Retry the original request
+        if (!this.instance) {
+          throw new Error("Cannot retry request: instance is null");
+        }
         return this.instance.request(originalRequest);
       } catch (refreshError) {
         // Refresh failed, clear tokens and redirect to login
@@ -359,7 +379,7 @@ export abstract class VpsHttpClient {
       originalError: error,
     };
     return Promise.reject(errorData);
-  };
+  }
 
   /** Helper để tạo ErrorData chuẩn */
   private createError(
@@ -391,6 +411,9 @@ export abstract class VpsHttpClient {
 
   /** ----- Public API methods (trả về nguyên response, không phải chỉ data) ----- */
   public async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    if (!this.instance) {
+      throw new Error("VpsHttpClient instance is not initialized. Cannot make GET request.");
+    }
     return this.instance.get<T>(url, config);
   }
 
@@ -399,6 +422,9 @@ export abstract class VpsHttpClient {
     data?: D,
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
+    if (!this.instance) {
+      throw new Error("VpsHttpClient instance is not initialized. Cannot make POST request.");
+    }
     return this.instance.post<T>(url, data, config);
   }
 
@@ -407,6 +433,9 @@ export abstract class VpsHttpClient {
     data?: D,
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
+    if (!this.instance) {
+      throw new Error("VpsHttpClient instance is not initialized. Cannot make PUT request.");
+    }
     return this.instance.put<T>(url, data, config);
   }
 
@@ -415,6 +444,9 @@ export abstract class VpsHttpClient {
     data?: D,
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
+    if (!this.instance) {
+      throw new Error("VpsHttpClient instance is not initialized. Cannot make PATCH request.");
+    }
     return this.instance.patch<T>(url, data, config);
   }
 
@@ -422,6 +454,9 @@ export abstract class VpsHttpClient {
     url: string,
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
+    if (!this.instance) {
+      throw new Error("VpsHttpClient instance is not initialized. Cannot make DELETE request.");
+    }
     return this.instance.delete<T>(url, config);
   }
 }
