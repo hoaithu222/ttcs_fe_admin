@@ -209,7 +209,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                   aria-label={tCommon("close")}
                   onClick={handleClose}
                   data-testid={`${testId}-close`}
-                  className="text-neutral-7"
+                  className="text-white"
                 />
               </Dialog.Close>
             </div>

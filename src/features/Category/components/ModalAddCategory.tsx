@@ -7,7 +7,7 @@ import ImageUpload from "@/foundation/components/input/ImageUpload";
 import { CreateCategoryPayload } from "../slice/category.type";
 import { useAppDispatch } from "@/app/store";
 import { createCategoryStart } from "../slice/category.slice";
-import { NotebookPenIcon } from "lucide-react";
+import Icon from "@/foundation/components/icons/Icon";
 import IconCircleWrapper from "@/foundation/components/icons/IconCircleWrapper";
 import { imagesApi } from "@/core/api/images";
 
@@ -65,17 +65,17 @@ const ModalAddCategory: React.FC<ModalAddCategoryProps> = ({ open, onOpenChange 
     <Modal
       open={open}
       onOpenChange={onOpenChange}
-      size="lg"
+      size="3xl"
       title={
         <div className="flex gap-3 items-center">
           <IconCircleWrapper
-            size="lg"
+            size="md"
             color="primary"
             glow={true}
             hoverEffect="lift"
             shadowSize="lg"
           >
-            <NotebookPenIcon className="w-6 h-6 text-blue-600" />
+            <Icon name="NotebookPen" size="md" color="primary" />
           </IconCircleWrapper>
           <div>
             <h2 className="text-xl font-bold text-neutral-9">Thêm danh mục mới</h2>
@@ -145,7 +145,7 @@ const ModalAddCategory: React.FC<ModalAddCategoryProps> = ({ open, onOpenChange 
             onChange={setImageIcon}
             onUpload={handleImageUpload}
             label="Icon danh mục"
-            padding={20}
+            padding="p-5"
             maxSizeInMB={5}
             testId="category-icon-upload"
           />

@@ -10,7 +10,7 @@ import { updateCategoryStart } from "../slice/category.slice";
 import { Category } from "@/core/api/categories/type";
 import { imagesApi } from "@/core/api/images";
 import IconCircleWrapper from "@/foundation/components/icons/IconCircleWrapper";
-import { PencilIcon } from "lucide-react";
+import Icon from "@/foundation/components/icons/Icon";
 
 interface ModalEditCategoryProps {
   open: boolean;
@@ -95,7 +95,7 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
     <Modal
       open={open}
       onOpenChange={onOpenChange}
-      size="lg"
+      size="3xl"
       title={
         <div className="flex gap-3 items-center">
           <IconCircleWrapper
@@ -105,7 +105,7 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
             hoverEffect="lift"
             shadowSize="lg"
           >
-            <PencilIcon className="w-6 h-6 text-blue-600" />
+            <Icon name="Pencil" size="md" color="primary" />
           </IconCircleWrapper>
           <div>
             <h2 className="text-xl font-bold text-neutral-9">Chỉnh sửa danh mục</h2>
@@ -185,9 +185,9 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
             onChange={setImageIcon}
             onUpload={handleImageUpload}
             label="Icon danh mục"
-            width={40}
-            height={40}
-            padding={20}
+            width={160}
+            height={160}
+            padding="p-5"
             maxSizeInMB={5}
             testId="category-icon-upload"
           />

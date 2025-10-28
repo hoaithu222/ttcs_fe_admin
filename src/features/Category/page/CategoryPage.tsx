@@ -1,32 +1,29 @@
 import React, { useEffect, useState } from "react";
-import * as Form from "@radix-ui/react-form";
-import { useAppSelector, useAppDispatch } from "@/app/store";
+import { useAppSelector } from "@/app/store";
 import {
   selectCategories,
   selectCategoryLoading,
   selectCategoryPagination,
+  selectCategoryFilters,
 } from "../slice/category.selector";
 import { useCategoryActions } from "../hooks/useCategoryActions";
 import TableCategory from "../components/TableCategory";
 import ModalAddCategory from "../components/ModalAddCategory";
 import ModalEditCategory from "../components/ModalEditCategory";
 import Button from "@/foundation/components/buttons/Button";
-import Icon from "@/foundation/components/icons/Icon";
-import Input from "@/foundation/components/input/Input";
 import { Category } from "@/core/api/categories/type";
-import { PlusIcon } from "lucide-react";
-
+import Icon from "@/foundation/components/icons/Icon";
+import FormFilter from "../components/FormFilter";
 const CategoryPage: React.FC = () => {
-  const dispatch = useAppDispatch(); // Not used but kept for future use
   const categories = useAppSelector(selectCategories);
   const isLoading = useAppSelector(selectCategoryLoading);
   const pagination = useAppSelector(selectCategoryPagination);
+  const filters = useAppSelector(selectCategoryFilters);
   const { fetchCategories, deleteCategory } = useCategoryActions();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchCategories({ page: 1, limit: 10 });
@@ -34,7 +31,12 @@ const CategoryPage: React.FC = () => {
   }, []);
 
   const handlePageChange = (page: number) => {
-    fetchCategories({ page, limit: pagination.limit, search: searchTerm });
+    fetchCategories({
+      page,
+      limit: pagination.limit,
+      search: filters.search,
+      isActive: filters.isActive,
+    });
   };
 
   const handleEdit = (category: Category) => {
@@ -44,21 +46,32 @@ const CategoryPage: React.FC = () => {
 
   const handleDelete = (id: string) => {
     deleteCategory(id);
-    fetchCategories({ page: pagination.page, limit: pagination.limit });
+    fetchCategories({
+      page: pagination.page,
+      limit: pagination.limit,
+      search: filters.search,
+      isActive: filters.isActive,
+    });
   };
 
   const handleAddSuccess = () => {
-    fetchCategories({ page: pagination.page, limit: pagination.limit });
+    fetchCategories({
+      page: pagination.page,
+      limit: pagination.limit,
+      search: filters.search,
+      isActive: filters.isActive,
+    });
   };
 
   const handleEditSuccess = () => {
     setIsEditModalOpen(false);
     setSelectedCategory(null);
-    fetchCategories({ page: pagination.page, limit: pagination.limit });
-  };
-
-  const handleSearch = () => {
-    fetchCategories({ page: 1, limit: pagination.limit, search: searchTerm });
+    fetchCategories({
+      page: pagination.page,
+      limit: pagination.limit,
+      search: filters.search,
+      isActive: filters.isActive,
+    });
   };
 
   return (
@@ -68,7 +81,7 @@ const CategoryPage: React.FC = () => {
         <h3 className="mb-0 text-xl font-bold text-neutral-10">Quản lý danh mục</h3>
         <Button
           variant="outlined"
-          icon={<PlusIcon />}
+          icon={<Icon name="Plus" size="sm" />}
           onClick={() => setIsAddModalOpen(true)}
           testId="add-category-btn"
         >
@@ -76,18 +89,24 @@ const CategoryPage: React.FC = () => {
         </Button>
       </div>
 
+      <div className="my-3">
+        <FormFilter />
+      </div>
+
       {/* Table */}
-      <TableCategory
-        data={categories}
-        isLoading={isLoading}
-        onPageChange={handlePageChange}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        page={pagination.page}
-        totalPages={pagination.totalPages}
-        totalItems={pagination.total}
-        itemsPerPage={pagination.limit}
-      />
+      <div className="mt-4 h-[calc(100vh - 300px)] overflow-y-auto">
+        <TableCategory
+          data={categories}
+          isLoading={isLoading}
+          onPageChange={handlePageChange}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.total}
+          itemsPerPage={pagination.limit}
+        />
+      </div>
 
       {/* Modals */}
       <ModalAddCategory

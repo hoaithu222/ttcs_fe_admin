@@ -77,6 +77,7 @@ const getStickyShadowsMap = (columns: any[]): Map<number, { left?: boolean; righ
 import Spinner from "../feedback/Spinner";
 import ScrollView from "../scroll/ScrollView";
 import Pagination from "./Pagination";
+import Empty from "../empty/Empty";
 
 // --- Extracted common class constants for reuse ---
 const BASE_CELL_HEADER_CLASSES = "min-h-12 px-4 py-3 text-neutral-10 text-body-13-semibold";
@@ -203,7 +204,14 @@ function PaginatedTable<TData extends object>({
   onRowClick,
   error = null,
   loadingComponent = <Spinner />,
-  emptyComponent = <span className="text-caption-12 text-neutral-10">{t("empty")}</span>,
+  emptyComponent = (
+    <Empty
+      variant="data"
+      size="medium"
+      title="Chưa có dữ liệu"
+      description="Bắt đầu tạo dữ liệu mới để quản lý sản phẩm của bạn"
+    />
+  ),
   errorComponent,
   containerClassName = "",
   tableClassName = "w-full border-collapse",
