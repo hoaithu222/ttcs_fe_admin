@@ -3,14 +3,18 @@ import * as Form from "@radix-ui/react-form";
 import Modal from "@/foundation/components/modal/Modal";
 import Input from "@/foundation/components/input/Input";
 import TextArea from "@/foundation/components/input/TextArea";
-import ImageUpload from "@/foundation/components/input/ImageUpload";
+import ImageIconUpload from "@/foundation/components/input/upload/ImageIconUpload";
+import ImageUploadMulti from "@/foundation/components/input/upload/ImageUploadMulti";
+import ImageBannerUpdate from "@/foundation/components/input/upload/ImageBannerUpload";
+import ScrollView from "@/foundation/components/scroll/ScrollView";
 import { UpdateCategoryPayload } from "../slice/category.type";
 import { useAppDispatch } from "@/app/store";
 import { updateCategoryStart } from "../slice/category.slice";
 import { Category } from "@/core/api/categories/type";
 import { imagesApi } from "@/core/api/images";
 import IconCircleWrapper from "@/foundation/components/icons/IconCircleWrapper";
-import Icon from "@/foundation/components/icons/Icon";
+import { EditIcon } from "lucide-react";
+import AlertMessage from "@/foundation/components/info/AlertMessage";
 
 interface ModalEditCategoryProps {
   open: boolean;
@@ -32,6 +36,11 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
 
   const [errors, setErrors] = useState<{ name?: string }>({});
   const [imageIcon, setImageIcon] = useState<{ url: string; publicId?: string } | null>(null);
+  const [bannerImage, setBannerImage] = useState<{ url: string; publicId?: string } | null>(null);
+  const [galleryImages, setGalleryImages] = useState<Array<{
+    url: string;
+    publicId?: string;
+  }> | null>(null);
 
   useEffect(() => {
     if (category) {
@@ -51,6 +60,21 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
           publicId: category.image_Icon.publicId,
         });
       }
+      // Set gallery images if exists
+      if (Array.isArray((category as any).image) && (category as any).image.length > 0) {
+        const imgs = ((category as any).image as Array<{ url: string; publicId?: string }>).map(
+          (i) => ({ url: i.url, publicId: i.publicId })
+        );
+        setGalleryImages(imgs);
+      } else {
+        setGalleryImages(null);
+      }
+      // Set banner from image_Background if exists
+      if ((category as any).image_Background) {
+        const b: any = (category as any).image_Background;
+        const normalized = b?.url ? { url: b.url, publicId: b.publicId } : null;
+        setBannerImage(normalized);
+      }
     }
   }, [category]);
 
@@ -60,12 +84,14 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
       return;
     }
 
-    // Add image_Icon to formData if uploaded
+    // Add image fields to formData if uploaded
     const submitData = {
       ...formData,
       data: {
         ...formData.data,
+        ...(galleryImages && galleryImages.length > 0 && { image: galleryImages }),
         ...(imageIcon && { image_Icon: imageIcon }),
+        ...(bannerImage && { image_Background: bannerImage }),
       },
     };
 
@@ -80,6 +106,16 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
       publicId: result.publicId,
     };
     setImageIcon(uploadResult);
+    return uploadResult;
+  };
+
+  const handleBannerUpload = async (file: File) => {
+    const result = await imagesApi.uploadImage(file);
+    const uploadResult = {
+      url: result.url,
+      publicId: result.publicId,
+    };
+    setBannerImage(uploadResult);
     return uploadResult;
   };
 
@@ -98,14 +134,8 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
       size="3xl"
       title={
         <div className="flex gap-3 items-center">
-          <IconCircleWrapper
-            size="lg"
-            color="primary"
-            glow={true}
-            hoverEffect="lift"
-            shadowSize="lg"
-          >
-            <Icon name="Pencil" size="md" color="primary" />
+          <IconCircleWrapper size="lg" color="info">
+            <EditIcon className="text-info" />
           </IconCircleWrapper>
           <div>
             <h2 className="text-xl font-bold text-neutral-9">Chỉnh sửa danh mục</h2>
@@ -124,88 +154,75 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
       headerPadding="pb-8"
     >
       <Form.Root>
-        <div className="space-y-6">
-          <div className="p-4 mb-2 bg-blue-50 rounded-lg border border-blue-100">
-            <div className="flex gap-3 items-start">
-              <svg
-                className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <div>
-                <p className="text-sm font-medium text-blue-900">Thông tin quan trọng</p>
-                <p className="mt-1 text-xs text-blue-700">
-                  Tên danh mục là bắt buộc và sẽ được hiển thị trên hệ thống.
-                </p>
-              </div>
-            </div>
+        <ScrollView className="h-[500px]" hideScrollbarY={false}>
+          <div className="space-y-6 p-0.5">
+            <AlertMessage
+              type="info"
+              title="Thông tin quan trọng"
+              message="Tên danh mục là bắt buộc và sẽ được hiển thị trên hệ thống."
+            />
+
+            <Input
+              name="name"
+              label="Tên danh mục"
+              placeholder="Ví dụ: Điện tử, Quần áo, Thực phẩm..."
+              value={formData.data.name || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  data: { ...formData.data, name: e.target.value },
+                })
+              }
+              error={errors.name}
+              required
+              className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
+            />
+
+            <TextArea
+              name="description"
+              label="Mô tả"
+              placeholder="Nhập mô tả chi tiết về danh mục này..."
+              value={formData.data.description || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  data: { ...formData.data, description: e.target.value },
+                })
+              }
+              rows={4}
+              className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
+            />
+
+            <ImageIconUpload
+              value={imageIcon}
+              onChange={setImageIcon}
+              onUpload={handleImageUpload}
+              label="Icon danh mục"
+              maxSizeInMB={5}
+              testId="category-icon-upload"
+            />
+            <ImageUploadMulti
+              value={galleryImages}
+              onChange={setGalleryImages}
+              onUpload={async (file) => {
+                const result = await imagesApi.uploadImage(file);
+                return { url: result.url, publicId: result.publicId };
+              }}
+              label="Bộ sưu tập ảnh danh mục (nhiều ảnh)"
+              maxFiles={10}
+              maxSizeInMB={8}
+            />
+            <ImageBannerUpdate
+              value={bannerImage}
+              onChange={setBannerImage}
+              onUpload={handleBannerUpload}
+              label="Banner danh mục"
+              aspectRatio="banner"
+              maxSizeInMB={8}
+              testId="category-banner-upload"
+            />
           </div>
-
-          <Input
-            name="name"
-            label="Tên danh mục"
-            placeholder="Ví dụ: Điện tử, Quần áo, Thực phẩm..."
-            value={formData.data.name || ""}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                data: { ...formData.data, name: e.target.value },
-              })
-            }
-            error={errors.name}
-            required
-            className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
-          />
-
-          <TextArea
-            name="description"
-            label="Mô tả"
-            placeholder="Nhập mô tả chi tiết về danh mục này..."
-            value={formData.data.description || ""}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                data: { ...formData.data, description: e.target.value },
-              })
-            }
-            rows={4}
-            className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
-          />
-
-          <ImageUpload
-            value={imageIcon}
-            onChange={setImageIcon}
-            onUpload={handleImageUpload}
-            label="Icon danh mục"
-            width={160}
-            height={160}
-            padding="p-5"
-            maxSizeInMB={5}
-            testId="category-icon-upload"
-          />
-
-          <div className="pt-2">
-            <div className="flex gap-2 items-center text-sm text-neutral-6">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>Icon sẽ được hiển thị trong danh sách danh mục</span>
-            </div>
-          </div>
-        </div>
+        </ScrollView>
       </Form.Root>
     </Modal>
   );

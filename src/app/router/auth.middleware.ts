@@ -42,7 +42,8 @@ export const authMiddleware = (options: { requireAuth: boolean }) => {
       // Nếu cần authentication nhưng chưa đăng nhập và không phải trang login
       if (options.requireAuth && !isAuthenticated && !isLoginPage) {
         console.log("Redirecting to login - not authenticated");
-        return redirect("/login");
+        // Preserve intended destination so we can return after login
+        return redirect(`/login?from=${encodeURIComponent(pathname)}`);
       }
 
       // Nếu đã đăng nhập mà vào trang login thì redirect về home

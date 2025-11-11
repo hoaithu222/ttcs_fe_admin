@@ -7,6 +7,7 @@ import Icon from "@/foundation/components/icons/Icon";
 import { useCategoryActions } from "../hooks/useCategoryActions";
 import { useAppSelector } from "@/app/store";
 import { selectCategoryFilters } from "../slice/category.selector";
+import { Activity } from "lucide-react";
 
 const FormFilter = () => {
   const { fetchCategories } = useCategoryActions();
@@ -16,20 +17,25 @@ const FormFilter = () => {
   const [isActiveValue, setIsActiveValue] = useState<string>(
     filters.isActive !== undefined ? (filters.isActive ? "true" : "false") : ""
   );
+  const [limitValue, setLimitValue] = useState<string>("10");
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   };
 
   const handleIsActiveChange = (value: string) => {
-    setIsActiveValue(value);
+    setIsActiveValue(value === "all" ? "" : value);
+  };
+
+  const handleLimitChange = (value: string) => {
+    setLimitValue(value);
   };
 
   const handleApplyFilter = () => {
     const isActive = isActiveValue === "" ? undefined : isActiveValue === "true";
     fetchCategories({
       page: 1,
-      limit: 10,
+      limit: parseInt(limitValue || "10", 10),
       search: searchValue,
       isActive,
     });
@@ -38,6 +44,7 @@ const FormFilter = () => {
   const handleClearFilter = () => {
     setSearchValue("");
     setIsActiveValue("");
+    setLimitValue("10");
     fetchCategories({ page: 1, limit: 10 });
   };
 
@@ -70,9 +77,27 @@ const FormFilter = () => {
             placeholder="Tất cả trạng thái"
             value={isActiveValue}
             onChange={handleIsActiveChange}
+            defaultValue="all"
             options={[
+              { value: "all", label: "Tất cả trạng thái" },
               { value: "true", label: "Đang hoạt động" },
               { value: "false", label: "Không hoạt động" },
+            ]}
+            sizeSelect="md"
+          />
+        </div>
+        {/* số items trên trang */}
+        <div className="w-[300px]">
+          <Select
+            name="limit"
+            placeholder="Số items trên trang"
+            value={limitValue}
+            onChange={handleLimitChange}
+            options={[
+              { value: "10", label: "10" },
+              { value: "20", label: "20" },
+              { value: "50", label: "50" },
+              { value: "100", label: "100" },
             ]}
             sizeSelect="md"
           />

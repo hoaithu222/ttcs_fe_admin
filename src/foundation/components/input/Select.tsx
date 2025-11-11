@@ -145,7 +145,6 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
       truncatePlaceholder = true,
       customHeight,
       activeClassName,
-      downArrowIcon = "DownArrow",
       defaultOpen = false,
       fallback = "",
       allow = false,
@@ -199,14 +198,16 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
       if (groups) {
         return groups.map((group) => (
           <React.Fragment key={group.label}>
-            <SelectPrimitive.Label className="px-3 py-1">{group.label}</SelectPrimitive.Label>
+            <SelectPrimitive.Label className="px-3 py-1 text-neutral-9">
+              {group.label}
+            </SelectPrimitive.Label>
             {group.options.map((opt) => (
               <SelectPrimitive.Item
                 key={opt.value}
                 value={opt.value}
                 className={clsx(
                   "flex relative items-center px-3 py-2 outline-none select-none",
-                  "text-neutral-9 hover:bg-primary-10 focus:bg-primary-10",
+                  "text-neutral-9 hover:bg-background-2 focus:bg-background-2",
                   itemClassName
                 )}
                 data-testid={`${testId}-item-${opt.value}`}
@@ -223,7 +224,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
           value={opt.value}
           className={clsx(
             "relative flex select-none items-center px-3 py-2 outline-none",
-            "text-neutral-9 hover:bg-primary-10 focus:bg-primary-10",
+            "text-neutral-9 hover:bg-background-2 focus:bg-background-2",
             `${opt.value === valueFilter && "hidden"}`,
             itemClassName
           )}
@@ -270,7 +271,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
           >
             {label && (
               <div className="flex gap-1 items-center mb-1">
-                <Form.Label htmlFor={selectId} className="block">
+                <Form.Label htmlFor={selectId} className="block text-neutral-9">
                   {label}
                   {required && <span className="text-red-5">*</span>}
                 </Form.Label>
@@ -313,7 +314,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                       className={clsx(
                         "text-left bg-transparent outline-none",
                         placeholderClassName,
-                        normalizedValue ? `${activeClassName} text-neutral-9` : "text-neutral-4",
+                        normalizedValue ? `${activeClassName} text-neutral-9` : "text-neutral-6",
                         truncatePlaceholder ? "truncate" : "whitespace-nowrap"
                       )}
                     >
@@ -330,7 +331,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                       className={clsx(
                         "text-left bg-transparent outline-none",
                         placeholderClassName,
-                        normalizedValue ? `${activeClassName} text-neutral-9` : "text-neutral-4",
+                        normalizedValue ? `${activeClassName} text-neutral-9` : "text-neutral-6",
                         truncatePlaceholder ? "truncate" : "whitespace-nowrap"
                       )}
                     >
@@ -340,7 +341,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                   </>
                 )}
 
-                <div className="flex gap-2 items-center ml-2">
+                <div className="flex gap-2 items-center ">
                   {clearable && normalizedValue ? (
                     <Icon
                       name="CloseOutlined"

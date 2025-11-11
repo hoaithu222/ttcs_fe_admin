@@ -41,6 +41,16 @@ export const NAVIGATION_CONFIG: Record<string, NavigationConfig> = {
     name: "Categories",
     requireAuth: true,
   },
+  subCategories: {
+    path: "/sub-categories",
+    name: "Sub Categories",
+    requireAuth: true,
+  },
+  attributes: {
+    path: "/attributes",
+    name: "Attributes",
+    requireAuth: true,
+  },
   analytics: {
     path: "/analytics",
     name: "Analytics",

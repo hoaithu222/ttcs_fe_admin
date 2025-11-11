@@ -33,7 +33,7 @@ const TableCategory: React.FC<TableCategoryProps> = ({
   const columns: ColumnWithSummary<Category>[] = [
     {
       id: "image_Icon",
-      header: "Hình ảnh",
+      header: "Icon",
       accessorKey: "image_Icon",
       cell: (info) => (
         <div className="flex justify-center">
@@ -50,16 +50,63 @@ const TableCategory: React.FC<TableCategoryProps> = ({
         className: "text-center",
         align: "text-center",
       },
+      size: 100, // Fixed size instead of string
+    },
+    {
+      id: "image",
+      header: "Hình ảnh",
+      accessorKey: "image",
+      cell: (info) => {
+        const gallery = info.row.original.image;
+        const src = Array.isArray(gallery) && gallery.length > 0 ? gallery[0]?.url : undefined;
+        return (
+          <div className="flex justify-center">
+            {src ? (
+              <img
+                src={src}
+                alt={info.row.original.name}
+                className="object-cover w-16 h-16 rounded-lg border shadow-sm transition-all duration-200 2xl:w-20 2xl:h-20 border-divider-1 hover:shadow-md"
+              />
+            ) : null}
+          </div>
+        );
+      },
+      meta: { className: "text-center", align: "text-center" },
+      size: 150, // Fixed size instead of string
+    },
+    {
+      id: "image_Background",
+      header: "Banner",
+      accessorKey: "image_Background",
+      cell: (info) => (
+        <div className="flex justify-center">
+          {info.row.original.image_Background && (
+            <img
+              src={info.row.original.image_Background.url}
+              alt={info.row.original.name}
+              className="object-cover w-28 h-12 rounded-md border shadow-sm transition-all duration-200 2xl:w-36 2xl:h-14 border-divider-1 hover:shadow-md"
+            />
+          )}
+        </div>
+      ),
+      meta: { className: "text-center", align: "text-center" },
+      size: 200, // Fixed size instead of string
     },
     {
       id: "name",
       header: "Tên danh mục",
       accessorKey: "name",
       cell: (info) => (
-        <div className="flex gap-3 items-center">
-          <span className="font-semibold text-neutral-10">{info.getValue() as string}</span>
+        <div className="flex gap-3 items-center max-w-[240px]">
+          <span
+            className="font-semibold text-neutral-10 truncate"
+            title={String(info.getValue() ?? "")}
+          >
+            {info.getValue() as string}
+          </span>
         </div>
       ),
+      size: 200, // Fixed size instead of string
     },
     {
       id: "description",
@@ -82,6 +129,7 @@ const TableCategory: React.FC<TableCategoryProps> = ({
           </Tooltip>
         );
       },
+      size: 300, // Fixed size instead of string
     },
     {
       id: "isActive",
@@ -164,10 +212,11 @@ const TableCategory: React.FC<TableCategoryProps> = ({
       itemsPerPage={itemsPerPage}
       showIndex
       showPagination
-      containerClassName="bg-background-1 border border-divider-1 rounded-lg shadow-sm"
+      containerClassName="bg-background-1 border border-divider-1 rounded-lg shadow-sm overflow-x-auto"
       tableClassName="min-w-full"
       headerClassName="bg-gradient-to-r from-neutral-1 to-neutral-2 border-b border-divider-1"
       rowClassName="border-b border-divider-1 hover:bg-cell-header transition-colors duration-150"
+      hideScrollbarX={false}
       testId="category-table"
     />
   );

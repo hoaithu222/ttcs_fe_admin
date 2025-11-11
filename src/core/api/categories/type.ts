@@ -6,6 +6,7 @@ export interface Category {
   image?: Array<{ url: string; publicId: string }>;
   image_Background?: { url: string; publicId: string };
   image_Icon?: { url: string; publicId: string };
+  banner?: string;
   isActive: boolean;
   order_display: number;
   createdAt: string;

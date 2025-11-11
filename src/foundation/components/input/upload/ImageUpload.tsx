@@ -93,7 +93,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   return (
     <div className={clsx("space-y-2", className)} data-testid={testId}>
-      {label && <label className="block text-sm font-semibold text-gray-700">{label}</label>}
+      {label && <label className="block text-sm font-semibold text-neutral-9">{label}</label>}
 
       <div
         className="relative"

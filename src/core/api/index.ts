@@ -15,3 +15,6 @@ export { wishlistApi } from "./wishlist";
 export { notificationsApi } from "./notifications";
 export { paymentsApi } from "./payments";
 export { adminApi } from "./admin";
+export { attributeTypesApi } from "./attribute-type";
+export { attributeValuesApi } from "./attribute-value";
+export { productAttributesApi } from "./product-attribute";

@@ -39,9 +39,7 @@ export const useCategoryActions = () => {
 
   const deleteCategory = useCallback(
     (id: string) => {
-      if (window.confirm("Bạn có chắc chắn muốn xóa danh mục này?")) {
-        dispatch(deleteCategoryStart(id));
-      }
+      dispatch(deleteCategoryStart(id));
     },
     [dispatch]
   );

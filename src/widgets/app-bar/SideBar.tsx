@@ -25,6 +25,8 @@ const Sidebar = () => {
     { key: "products", icon: Package, path: NAVIGATION_CONFIG.products.path },
     { key: "orders", icon: ShoppingCart, path: NAVIGATION_CONFIG.orders.path },
     { key: "categories", icon: FolderOpen, path: NAVIGATION_CONFIG.categories.path },
+    { key: "subCategories", icon: FolderOpen, path: NAVIGATION_CONFIG.subCategories.path },
+    { key: "attributes", icon: FolderOpen, path: NAVIGATION_CONFIG.attributes.path },
     { key: "analytics", icon: BarChart3, path: NAVIGATION_CONFIG.analytics.path },
     { key: "settings", icon: Settings, path: NAVIGATION_CONFIG.settings.path },
   ];

@@ -297,7 +297,7 @@ const Input = React.forwardRef<HTMLInputElement, FieldInputProps>(
         <div ref={regionRef} data-testid={testId} className="w-full">
           {/* Label */}
           {label && (
-            <Form.Label htmlFor={inputId} className="block text-body-13 text-neutral-9">
+            <Form.Label htmlFor={inputId} className="block mb-1 text-body-13 text-neutral-9">
               {label}
               {required && <span className="text-error">*</span>}
             </Form.Label>

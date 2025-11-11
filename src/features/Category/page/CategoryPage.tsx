@@ -14,6 +14,7 @@ import Button from "@/foundation/components/buttons/Button";
 import { Category } from "@/core/api/categories/type";
 import Icon from "@/foundation/components/icons/Icon";
 import FormFilter from "../components/FormFilter";
+import ConfirmModal from "@/foundation/components/modal/ModalConfirm";
 const CategoryPage: React.FC = () => {
   const categories = useAppSelector(selectCategories);
   const isLoading = useAppSelector(selectCategoryLoading);
@@ -23,7 +24,9 @@ const CategoryPage: React.FC = () => {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategories({ page: 1, limit: 10 });
@@ -44,8 +47,16 @@ const CategoryPage: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    deleteCategory(id);
+  const handleRequestDelete = (id: string) => {
+    setPendingDeleteId(id);
+    setIsConfirmDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!pendingDeleteId) return;
+    deleteCategory(pendingDeleteId);
+    setIsConfirmDeleteModalOpen(false);
+    setPendingDeleteId(null);
     fetchCategories({
       page: pagination.page,
       limit: pagination.limit,
@@ -100,7 +111,7 @@ const CategoryPage: React.FC = () => {
           isLoading={isLoading}
           onPageChange={handlePageChange}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={handleRequestDelete}
           page={pagination.page}
           totalPages={pagination.totalPages}
           totalItems={pagination.total}
@@ -127,6 +138,26 @@ const CategoryPage: React.FC = () => {
           }
         }}
         category={selectedCategory}
+      />
+
+      <ConfirmModal
+        open={isConfirmDeleteModalOpen}
+        onOpenChange={setIsConfirmDeleteModalOpen}
+        title="Xác nhận xóa danh mục"
+        content="Bạn có chắc chắn muốn xóa danh mục này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        iconType="warning"
+        decorClasses={{
+          container: "bg-background-1",
+          border: "border-warning",
+          glow: "shadow-[0_0_0_6px_rgba(255,217,61,0.08)]",
+        }}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setIsConfirmDeleteModalOpen(false);
+          setPendingDeleteId(null);
+        }}
       />
     </div>
   );

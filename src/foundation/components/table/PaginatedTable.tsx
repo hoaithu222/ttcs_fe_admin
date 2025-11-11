@@ -281,7 +281,7 @@ function PaginatedTable<TData extends object>({
             align: "text-center",
             // ...(stickyIndex && { sticky: "left" }),
           },
-          size: 32, // Fixed size instead of string
+          size: 60, // Fixed size instead of string
         }
       : null;
     const base = showIndex ? [indexColumn!, ...columns] : [...columns];

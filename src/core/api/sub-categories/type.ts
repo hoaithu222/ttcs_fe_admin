@@ -3,9 +3,11 @@ export interface SubCategory {
   _id: string;
   name: string;
   description?: string;
-  image?: string;
+  image?: { url: string; publicId: string } | null;
+  image_Background?: { url: string; publicId: string } | null;
+  image_Icon?: { url: string; publicId: string } | null;
   slug: string;
-  parentId: string;
+  categoryId: string;
   parentCategory?: {
     _id: string;
     name: string;
@@ -21,8 +23,10 @@ export interface SubCategory {
 export interface CreateSubCategoryRequest {
   name: string;
   description?: string;
-  image?: string;
-  parentId: string;
+  image?: { url: string; publicId: string };
+  image_Background?: { url: string; publicId: string };
+  image_Icon?: { url: string; publicId: string };
+  categoryId: string;
   isActive?: boolean;
   sortOrder?: number;
 }
@@ -36,7 +40,7 @@ export interface SubCategoryListQuery {
   limit?: number;
   search?: string;
   isActive?: boolean;
-  parentId?: string;
+  categoryId?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }

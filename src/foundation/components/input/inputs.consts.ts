@@ -170,9 +170,14 @@ export const INPUT_SIZE = {
 
 // Actual CSS classes for text sizes
 export const TEXT_SIZE = {
+  // canonical keys
   small: "text-caption-12",
   medium: "text-body-14",
   large: "text-body-16",
+  // legacy uppercase aliases to support existing usages
+  SMALL: "text-caption-12",
+  MEDIUM: "text-body-14",
+  LARGE: "text-body-16",
 } as const;
 
 // Export individual constants for backward compatibility
@@ -200,7 +205,7 @@ export const getSizeClass = (size: string): string => {
 export const BASE_INPUT_CLASS =
   "w-full px-3 py-2 border border-neutral-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-6 focus:border-primary-6 bg-background-input hover:border-neutral-5 transition-colors";
 export const BASE_INPUT_CLASS_ACTION =
-  "w-full px-3 py-2 pr-10 border border-neutral-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-6 focus:border-primary-6 bg-background-input hover:border-neutral-5 transition-colors";
+  "w-full px-3 py-2 border border-neutral-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-6 focus:border-primary-6 bg-background-input hover:border-neutral-5 transition-colors";
 export const BASE_POSITION_CLASS = "relative flex items-center";
 export const DISABLED_INPUT_CLASS = "opacity-50 cursor-not-allowed bg-neutral-1";
 export const ERROR_INPUT_CLASS = "border-error focus:ring-error focus:border-error";

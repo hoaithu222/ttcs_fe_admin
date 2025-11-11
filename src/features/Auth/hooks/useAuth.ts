@@ -22,21 +22,13 @@ export const useAuth = () => {
   const user = useAppSelector(selectUser);
   const logoutStatus = useAppSelector(selectLogoutStatus);
 
-  // Redirect sau khi login thành công
+  // Redirect sau khi logout thành công: chỉ khi đã thực sự không còn authenticated
   useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log("Redirecting to home after login success");
-      navigate(NAVIGATION_CONFIG.home.path);
-    }
-  }, [isAuthenticated, user, navigate]);
-
-  // Redirect sau khi logout thành công
-  useEffect(() => {
-    if (logoutStatus === ReduxStateType.SUCCESS) {
+    if (logoutStatus === ReduxStateType.SUCCESS && !isAuthenticated) {
       console.log("Logout successful, redirecting to login");
-      navigate(NAVIGATION_CONFIG.login.path);
+      navigate(NAVIGATION_CONFIG.login.path, { replace: true });
     }
-  }, [logoutStatus, navigate]);
+  }, [logoutStatus, isAuthenticated, navigate]);
 
   // Kiểm tra token khi component mount
   useEffect(() => {

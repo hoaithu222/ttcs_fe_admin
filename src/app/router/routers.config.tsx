@@ -5,7 +5,10 @@ const AuthPage = lazy(() => import("@/features/Auth/AuthPage"));
 const DashboardPage = lazy(() => import("@/features/Dashboard/DashboardPage"));
 const UsersPage = lazy(() => import("@/features/Users/UsersPage"));
 const ProductsPage = lazy(() => import("@/features/Products/ProductsPage"));
-const CategoriesPage = lazy(() => import("@/features/Category/page/CategoryPage"));
+// Switch to static imports to avoid dynamic import fetch errors during dev
+import CategoriesPage from "@/features/Category/page/CategoryPage";
+import SubCategoriesPage from "@/features/SubCategory/page/SubCategoryPage";
+const AttributesPage = lazy(() => import("@/features/Attribute/pages/AttributePage"));
 const defaultOptions = {
   requireAuth: false,
   hideInMenu: false,
@@ -49,6 +52,18 @@ export const ROUTE = {
   categories: {
     path: NAVIGATION_CONFIG.categories.path,
     element: <CategoriesPage />,
+    layout: "main",
+    options: defaultAuthOptions,
+  },
+  subCategories: {
+    path: NAVIGATION_CONFIG.subCategories.path,
+    element: <SubCategoriesPage />,
+    layout: "main",
+    options: defaultAuthOptions,
+  },
+  attributes: {
+    path: NAVIGATION_CONFIG.attributes.path,
+    element: <AttributesPage />,
     layout: "main",
     options: defaultAuthOptions,
   },

@@ -4,7 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
-
+import { X } from "lucide-react";
 import Button from "../buttons/Button";
 import Icon from "../icons/Icon";
 
@@ -190,7 +190,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                 </VisuallyHidden>
               </>
             ) : hasTitle ? (
-              <Dialog.Title className={clsx("text-title-20-bold text-neutral-9", titleClassName)}>
+              <Dialog.Title className={clsx("text-3xl text-neutral-9", titleClassName)}>
                 {title}
               </Dialog.Title>
             ) : (
@@ -204,13 +204,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           {showCloseIcon && (
             <div className={clsx(closeIconWrapperClassName)}>
               <Dialog.Close asChild>
-                <Icon
-                  name="CloseOutlined"
-                  aria-label={tCommon("close")}
-                  onClick={handleClose}
-                  data-testid={`${testId}-close`}
-                  className="text-white"
-                />
+                <X className="text-neutral-6 dark:text-white" />
               </Dialog.Close>
             </div>
           )}
