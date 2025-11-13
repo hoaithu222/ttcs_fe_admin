@@ -5,6 +5,7 @@ const AuthPage = lazy(() => import("@/features/Auth/AuthPage"));
 const DashboardPage = lazy(() => import("@/features/Dashboard/DashboardPage"));
 const UsersPage = lazy(() => import("@/features/Users/UsersPage"));
 const ProductsPage = lazy(() => import("@/features/Products/ProductsPage"));
+const ShopPage = lazy(() => import("@/features/Shop/page/ShopPage"));
 // Switch to static imports to avoid dynamic import fetch errors during dev
 import CategoriesPage from "@/features/Category/page/CategoryPage";
 import SubCategoriesPage from "@/features/SubCategory/page/SubCategoryPage";
@@ -64,6 +65,12 @@ export const ROUTE = {
   attributes: {
     path: NAVIGATION_CONFIG.attributes.path,
     element: <AttributesPage />,
+    layout: "main",
+    options: defaultAuthOptions,
+  },
+  shops: {
+    path: NAVIGATION_CONFIG.shops.path,
+    element: <ShopPage />,
     layout: "main",
     options: defaultAuthOptions,
   },

@@ -61,4 +61,9 @@ export const NAVIGATION_CONFIG: Record<string, NavigationConfig> = {
     name: "Settings",
     requireAuth: true,
   },
+  shops: {
+    path: "/shops",
+    name: "Shops",
+    requireAuth: true,
+  },
 } satisfies Record<string, NavigationConfig>;

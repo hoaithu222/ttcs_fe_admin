@@ -77,6 +77,27 @@ class ShopsApiService extends VpsHttpClient {
     const response = await this.get(endpoint);
     return response.data;
   }
+
+  // Approve shop (admin only)
+  async approveShop(id: string): Promise<ApiSuccess<Shop>> {
+    const endpoint = buildEndpoint(SHOPS_ENDPOINTS.APPROVE, { id });
+    const response = await this.post(endpoint);
+    return response.data;
+  }
+
+  // Reject shop (admin only)
+  async rejectShop(id: string): Promise<ApiSuccess<Shop>> {
+    const endpoint = buildEndpoint(SHOPS_ENDPOINTS.REJECT, { id });
+    const response = await this.post(endpoint);
+    return response.data;
+  }
+
+  // Suspend shop (admin only)
+  async suspendShop(id: string): Promise<ApiSuccess<Shop>> {
+    const endpoint = buildEndpoint(SHOPS_ENDPOINTS.SUSPEND, { id });
+    const response = await this.post(endpoint);
+    return response.data;
+  }
 }
 
 // Export singleton instance

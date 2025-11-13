@@ -15,6 +15,7 @@ export interface Shop {
     name: string;
     email: string;
   };
+  status?: "pending" | "active" | "blocked";
   isActive: boolean;
   isVerified: boolean;
   rating?: number;
@@ -45,6 +46,7 @@ export interface ShopListQuery {
   page?: number;
   limit?: number;
   search?: string;
+  status?: "pending" | "active" | "blocked";
   isActive?: boolean;
   isVerified?: boolean;
   ownerId?: string;

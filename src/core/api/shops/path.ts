@@ -9,6 +9,9 @@ export const SHOPS_ENDPOINTS = {
   UNFOLLOW: "/shops/:id/follow",
   FOLLOWING: "/shops/:id/following",
   FOLLOWERS_COUNT: "/shops/:id/followers/count",
+  APPROVE: "/shops/:id/approve",
+  REJECT: "/shops/:id/reject",
+  SUSPEND: "/shops/:id/suspend",
 } as const;
 
 // Generic endpoint builder
