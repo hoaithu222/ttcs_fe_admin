@@ -46,7 +46,7 @@ const AttributeTypeTable: React.FC<Props> = ({
       cell: (info) => (
         <div className="flex items-center gap-2 max-w-[240px]">
           <span
-            className="font-semibold text-neutral-10 truncate"
+            className="font-semibold truncate text-neutral-10"
             title={String(info.getValue() ?? "")}
           >
             {info.getValue() as string}
@@ -184,6 +184,7 @@ const AttributeTypeTable: React.FC<Props> = ({
         page={page}
         totalPages={totalPages}
         totalItems={totalItems}
+        scrollHeightOffset={280}
         itemsPerPage={itemsPerPage}
         showIndex
         showPagination

@@ -57,12 +57,28 @@ function* fetchUsersWorker(
     });
 
     // Backend returns: { data: { users: User[], pagination: {...} } }
-    const users = response.data?.users || [];
-    const pagination = response.data?.pagination || {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 0,
+    // or { data: User[], meta: { page, limit, total, totalPages } }
+    const users = Array.isArray(response.data)
+      ? response.data
+      : response.data?.users || [];
+
+    const rawPagination =
+      response.meta ||
+      response.data?.pagination || {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+      };
+
+    // Calculate totalPages if not provided
+    const pagination = {
+      ...rawPagination,
+      totalPages:
+        rawPagination.totalPages ||
+        (rawPagination.total && rawPagination.limit
+          ? Math.ceil(rawPagination.total / rawPagination.limit)
+          : 0),
     };
 
     yield put(

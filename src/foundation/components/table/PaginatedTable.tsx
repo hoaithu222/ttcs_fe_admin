@@ -10,9 +10,6 @@ import {
 } from "@tanstack/react-table";
 import clsx from "clsx";
 
-// Local i18n mock
-const i18n = { t: (key: string) => key };
-
 const applyStickyOffsets = (columns: ColumnWithSummary<any>[]): ColumnWithSummary<any>[] => {
   let leftOffset = 0;
   const columnsWithOffsets = columns.map((col) => {
@@ -100,8 +97,6 @@ export type ColumnWithSummary<T> = ColumnDef<T> & {
 
 type ColumnMeta<T> = ColumnWithSummary<T>["meta"];
 
-const t = (key: string) => (i18n.t as any)(key, { ns: "common" }) as string;
-
 export interface PaginatedTableProps<TData extends object> {
   columns: ColumnWithSummary<TData>[];
   data: TData[];
@@ -143,6 +138,8 @@ export interface PaginatedTableProps<TData extends object> {
   showPagination?: boolean;
   paginationClassName?: string;
   showPaginationInfo?: boolean;
+  /** Offset cho scroll height tính từ 100vh (default: 230px) */
+  scrollHeightOffset?: number;
 }
 
 /**
@@ -177,6 +174,7 @@ export interface PaginatedTableProps<TData extends object> {
  * @param {number} [totalItems] - Tổng số items (để hiển thị info)
  * @param {number} [itemsPerPage] - Số items trên mỗi trang (default: 10)
  * @param {string} [testId] - Prefix cho các data-testid attributes (default: "paginated-table")
+ * @param {number} [scrollHeightOffset] - Offset cho scroll height tính từ 100vh (default: 230px)
  *
  * @example
  * ```tsx
@@ -191,6 +189,7 @@ export interface PaginatedTableProps<TData extends object> {
  *   onRowClick={(row) => navigate(`/products/${row.id}`)}
  *   showIndex={true}
  *   indexOffset={(currentPage - 1) * 10}
+ *   scrollHeightOffset={300}
  * />
  * ```
  *
@@ -244,6 +243,7 @@ function PaginatedTable<TData extends object>({
   showPagination = true,
   paginationClassName = "",
   showPaginationInfo = true,
+  scrollHeightOffset = 230,
 }: PaginatedTableProps<TData>) {
   // -------------------------
   // Refs
@@ -338,7 +338,8 @@ function PaginatedTable<TData extends object>({
 
   return (
     <div
-      className={clsx("flex overflow-hidden relative flex-col size-full", containerClassName)}
+      className={clsx("flex overflow-hidden relative flex-col", containerClassName)}
+      style={{ height: `calc(100vh - ${scrollHeightOffset}px)` }}
       data-testid={testId}
     >
       {error && (

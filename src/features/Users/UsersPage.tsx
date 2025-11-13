@@ -13,6 +13,7 @@ import ConfirmModal from "@/foundation/components/modal/ModalConfirm";
 import Modal from "@/foundation/components/modal/Modal";
 import Select from "@/foundation/components/input/Select";
 import Button from "@/foundation/components/buttons/Button";
+import * as Form from "@radix-ui/react-form";
 import { User } from "@/core/api/users/type";
 
 const UsersPage: React.FC = () => {
@@ -139,17 +140,17 @@ const UsersPage: React.FC = () => {
       {/* Table */}
       <div className="mt-4">
         <UserTable
-          data={users}
-          isLoading={isLoading}
+          data={Array.isArray(users) ? users : []}
+          isLoading={Boolean(isLoading)}
           onPageChange={handlePageChange}
           onView={handleViewUser}
           onDelete={handleRequestDelete}
           onSuspend={handleRequestSuspend}
           onEditRole={handleRequestEditRole}
-          page={pagination.page}
-          totalPages={pagination.totalPages}
-          totalItems={pagination.total}
-          itemsPerPage={pagination.limit}
+          page={pagination?.page ?? 1}
+          totalPages={pagination?.totalPages ?? 1}
+          totalItems={pagination?.total ?? 0}
+          itemsPerPage={pagination?.limit ?? 10}
         />
       </div>
 
@@ -199,47 +200,49 @@ const UsersPage: React.FC = () => {
             setSelectedRole("");
           }
         }}
+        size="xl"
         title="Chỉnh sửa quyền người dùng"
       >
-        <div className="space-y-4">
-          {selectedUser && (
-            <>
-              <div>
-                <p className="text-sm text-neutral-6 mb-2">Người dùng:</p>
-                <p className="font-medium text-neutral-10">{selectedUser.name}</p>
-                <p className="text-sm text-neutral-7">{selectedUser.email}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-10 mb-2">
-                  Vai trò
-                </label>
-                <Select
-                  value={selectedRole}
-                  onChange={setSelectedRole}
-                  options={[
-                    { value: "user", label: "Người dùng" },
-                    { value: "moderator", label: "Điều hành viên" },
-                    { value: "admin", label: "Quản trị viên" },
-                  ]}
-                  sizeSelect="md"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    setIsEditRoleModalOpen(false);
-                    setSelectedUser(null);
-                    setSelectedRole("");
-                  }}
-                >
-                  Hủy
-                </Button>
-                <Button onClick={handleConfirmEditRole}>Lưu thay đổi</Button>
-              </div>
-            </>
-          )}
-        </div>
+        <Form.Root>
+          <div className="space-y-4">
+            {selectedUser && (
+              <>
+                <div>
+                  <p className="mb-2 text-sm text-neutral-6">Người dùng:</p>
+                  <p className="font-medium text-neutral-10">{selectedUser.name}</p>
+                  <p className="text-sm text-neutral-7">{selectedUser.email}</p>
+                </div>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-neutral-10">Vai trò</label>
+                  <Select
+                    name="role"
+                    value={selectedRole}
+                    onChange={setSelectedRole}
+                    options={[
+                      { value: "user", label: "Người dùng" },
+                      { value: "moderator", label: "Điều hành viên" },
+                      { value: "admin", label: "Quản trị viên" },
+                    ]}
+                    sizeSelect="md"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end pt-4">
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setIsEditRoleModalOpen(false);
+                      setSelectedUser(null);
+                      setSelectedRole("");
+                    }}
+                  >
+                    Hủy
+                  </Button>
+                  <Button onClick={handleConfirmEditRole}>Lưu thay đổi</Button>
+                </div>
+              </>
+            )}
+          </div>
+        </Form.Root>
       </Modal>
     </div>
   );
