@@ -39,7 +39,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="flex flex-col h-full border-r shadow-lg backdrop-blur-sm bg-background-1/95 border-border-2">
+    <div className="flex flex-col h-full border-r shadow-lg border-border-2">
       {/* Navigation Menu */}
       <ScrollView
         className="flex-1"
