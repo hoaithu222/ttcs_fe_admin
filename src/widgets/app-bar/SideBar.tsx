@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   FolderOpen,
   BarChart3,
+
   Settings,
   LogOut,
   ShoppingBag,
@@ -24,14 +25,15 @@ const Sidebar = () => {
     { key: "home", icon: Home, path: NAVIGATION_CONFIG.home.path },
     { key: "dashboard", icon: LayoutDashboard, path: NAVIGATION_CONFIG.dashboard.path },
     { key: "users", icon: Users, path: NAVIGATION_CONFIG.users.path },
-    { key: "products", icon: Package, path: NAVIGATION_CONFIG.products.path },
-    { key: "orders", icon: ShoppingCart, path: NAVIGATION_CONFIG.orders.path },
+    // { key: "products", icon: Package, path: NAVIGATION_CONFIG.products.path },
+    // { key: "orders", icon: ShoppingCart, path: NAVIGATION_CONFIG.orders.path },
     { key: "categories", icon: FolderOpen, path: NAVIGATION_CONFIG.categories.path },
     { key: "subCategories", icon: FolderOpen, path: NAVIGATION_CONFIG.subCategories.path },
     { key: "attributes", icon: FolderOpen, path: NAVIGATION_CONFIG.attributes.path },
     { key: "shops", icon: ShoppingBag, path: NAVIGATION_CONFIG.shops.path },
     { key: "analytics", icon: BarChart3, path: NAVIGATION_CONFIG.analytics.path },
     { key: "settings", icon: Settings, path: NAVIGATION_CONFIG.settings.path },
+  
   ];
 
   const handleLogout = () => {

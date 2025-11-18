@@ -8,6 +8,7 @@ export { usersApi } from "./users";
 export { ordersApi } from "./orders";
 export { cartApi } from "./cart";
 export { analyticsApi } from "./analytics";
+export { homeApi } from "./home";
 export { imagesApi } from "./images";
 export { addressesApi } from "./addresses";
 export { reviewsApi } from "./reviews";

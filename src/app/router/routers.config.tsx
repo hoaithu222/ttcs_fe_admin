@@ -1,8 +1,10 @@
 import { lazy } from "react";
 import { NAVIGATION_CONFIG } from "./naviagtion.config";
-const HomePage = lazy(() => import("@/features/Home/HomePage"));
+const HomePage = lazy(() => import("@/features/Home/page/HomePage"));
 const AuthPage = lazy(() => import("@/features/Auth/AuthPage"));
-const DashboardPage = lazy(() => import("@/features/Dashboard/DashboardPage"));
+const DashboardPage = lazy(() => import("@/features/Dashboard/page/DashboardPage"));
+const AnalyticsPage = lazy(() => import("@/features/Analytics/page/AnalyticsPage"));
+const SettingsPage = lazy(() => import("@/features/Settings/page/SettingsPage"));
 const UsersPage = lazy(() => import("@/features/Users/UsersPage"));
 const ProductsPage = lazy(() => import("@/features/Products/ProductsPage"));
 const ShopPage = lazy(() => import("@/features/Shop/page/ShopPage"));
@@ -71,6 +73,18 @@ export const ROUTE = {
   shops: {
     path: NAVIGATION_CONFIG.shops.path,
     element: <ShopPage />,
+    layout: "main",
+    options: defaultAuthOptions,
+  },
+  analytics: {
+    path: NAVIGATION_CONFIG.analytics.path,
+    element: <AnalyticsPage />,
+    layout: "main",
+    options: defaultAuthOptions,
+  },
+  settings: {
+    path: NAVIGATION_CONFIG.settings.path,
+    element: <SettingsPage />,
     layout: "main",
     options: defaultAuthOptions,
   },

@@ -6,6 +6,9 @@ import { attributeTypeSaga } from "@/features/Attribute/slice/attributeType.saga
 import { attributeValueSaga } from "@/features/Attribute/slice/attributeValue.saga";
 import { shopSaga } from "@/features/Shop/slice/Shop.saga";
 import { userSaga } from "@/features/Users/slice/user.saga";
+import { homeSaga } from "@/features/Home/slice/home.saga";
+import { dashboardSaga } from "@/features/Dashboard/slice/dashboard.saga";
+import { analyticsSaga } from "@/features/Analytics/slice/analytics.saga";
 
 export const rootSage = function* () {
   try {
@@ -17,6 +20,9 @@ export const rootSage = function* () {
       attributeValueSaga(),
       shopSaga(),
       userSaga(),
+      homeSaga(),
+      dashboardSaga(),
+      analyticsSaga(),
     ]);
   } catch (error) {
     console.error(error);
