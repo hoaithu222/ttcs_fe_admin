@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { CreateAttributeTypeRequest } from "@/core/api/attribute-type/type";
 import type { CreateAttributeValueRequest } from "@/core/api/attribute-value/type";
+import { slugify } from "@/shared/utils/slugify";
 
 export function useAttributeForms() {
   const inputTypeOptions = useMemo(
@@ -18,22 +19,29 @@ export function useAttributeForms() {
 
   const getDefaultTypeForm = (): CreateAttributeTypeRequest => ({
     name: "",
+    code: "",
     categoryId: "",
     description: "",
     isActive: true,
     is_multiple: false,
+    inputType: "select",
+    helperText: "",
     values: [],
   });
 
   const getDefaultValueForm = (attributeTypeId: string): CreateAttributeValueRequest => ({
     attributeTypeId,
     value: "",
+    label: "",
+    colorCode: "",
+    isActive: true,
   });
 
   return {
     inputTypeOptions,
     getDefaultTypeForm,
     getDefaultValueForm,
+    slugify,
   };
 }
 

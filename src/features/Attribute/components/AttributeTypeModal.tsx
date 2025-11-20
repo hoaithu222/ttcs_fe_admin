@@ -4,6 +4,7 @@ import Input from "@/foundation/components/input/Input";
 import Select from "@/foundation/components/input/Select";
 import Switch from "@/foundation/components/input/Switch";
 import Button from "@/foundation/components/buttons/Button";
+import TextArea from "@/foundation/components/input/TextArea";
 import type {
   AttributeType,
   CreateAttributeTypeRequest,
@@ -13,6 +14,7 @@ import { categoriesApi } from "@/core/api/categories";
 import type { Category } from "@/core/api/categories/type";
 import { PlusIcon, TrashIcon } from "lucide-react";
 import * as Form from "@radix-ui/react-form";
+import useAttributeForms from "../hooks/useAttributeForms";
 
 interface Props {
   open: boolean;
@@ -32,9 +34,13 @@ const AttributeTypeModal: React.FC<Props> = ({
   initialData,
   onSubmit,
 }) => {
+  const { inputTypeOptions, slugify } = useAttributeForms();
   const [form, setForm] = React.useState<CreateAttributeTypeRequest>({
     name: initialData?.name || "",
+    code: initialData?.code || "",
     description: initialData?.description || "",
+    helperText: initialData?.helperText || "",
+    inputType: initialData?.inputType || "select",
     categoryId:
       typeof initialData?.categoryId === "string"
         ? initialData.categoryId
@@ -45,6 +51,7 @@ const AttributeTypeModal: React.FC<Props> = ({
   });
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [newValue, setNewValue] = React.useState("");
+  const [isCodeManual, setIsCodeManual] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -57,7 +64,10 @@ const AttributeTypeModal: React.FC<Props> = ({
   React.useEffect(() => {
     setForm({
       name: initialData?.name || "",
+      code: initialData?.code || "",
       description: initialData?.description || "",
+      helperText: initialData?.helperText || "",
+      inputType: initialData?.inputType || "select",
       categoryId:
         typeof initialData?.categoryId === "string"
           ? initialData.categoryId
@@ -67,7 +77,14 @@ const AttributeTypeModal: React.FC<Props> = ({
       values: [],
     });
     setNewValue("");
+    setIsCodeManual(false);
   }, [initialData, open]);
+
+  React.useEffect(() => {
+    if (!isCodeManual && form.name && !form.code) {
+      setForm((prev) => ({ ...prev, code: slugify(prev.name) }));
+    }
+  }, [form.name, form.code, isCodeManual, slugify]);
 
   const handleChange = (key: keyof CreateAttributeTypeRequest, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -75,9 +92,11 @@ const AttributeTypeModal: React.FC<Props> = ({
 
   const handleAddValue = () => {
     if (newValue.trim()) {
+      const label = newValue.trim();
+      const value = slugify(label, "_");
       setForm((prev) => ({
         ...prev,
-        values: [...(prev.values || []), { value: newValue.trim() }],
+        values: [...(prev.values || []), { value: value || label, label }],
       }));
       setNewValue("");
     }
@@ -108,6 +127,17 @@ const AttributeTypeModal: React.FC<Props> = ({
                 handleChange("name", e.target.value)
               }
             />
+            <Input
+              name="attrType-code"
+              label="Mã hệ thống (slug)"
+              value={form.code || ""}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setIsCodeManual(true);
+                handleChange("code", slugify(e.target.value));
+              }}
+              placeholder="vd: color, storage_capacity"
+              description="Dùng tiếng Anh không dấu để đồng bộ với SKU/seed."
+            />
             <Select
               name="attrType-category"
               label="Danh mục"
@@ -117,6 +147,14 @@ const AttributeTypeModal: React.FC<Props> = ({
                 { label: "Chọn danh mục", value: "none" },
                 ...categories.map((cat) => ({ label: cat.name, value: cat._id })),
               ]}
+            />
+            <Select
+              name="attrType-inputType"
+              label="Loại trường nhập"
+              value={form.inputType || "select"}
+              onChange={(v: string) => handleChange("inputType", v)}
+              options={inputTypeOptions}
+              description="Xác định cách shop chọn giá trị cho thuộc tính này."
             />
             <div className="flex items-center gap-6">
               <Switch
@@ -141,6 +179,17 @@ const AttributeTypeModal: React.FC<Props> = ({
                 value={form.description || ""}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleChange("description", e.target.value)
+                }
+              />
+            </div>
+            <div className="md:col-span-2">
+              <TextArea
+                name="attrType-helper"
+                label="Hướng dẫn cho shop"
+                placeholder="Ví dụ: 'Chọn đúng dung lượng bộ nhớ theo thông số chính thức'"
+                value={form.helperText || ""}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  handleChange("helperText", e.target.value)
                 }
               />
             </div>
@@ -176,7 +225,10 @@ const AttributeTypeModal: React.FC<Props> = ({
                       key={index}
                       className="flex items-center gap-2 px-3 py-1 bg-neutral-2 rounded-full border border-divider-1"
                     >
-                      <span className="text-sm text-neutral-10">{item.value}</span>
+                      <span className="text-xs font-semibold text-neutral-9">
+                        {item.label}
+                      </span>
+                      <span className="text-[11px] text-neutral-5">({item.value})</span>
                       <Button
                         variant="ghost"
                         size="sm"

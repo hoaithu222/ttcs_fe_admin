@@ -2,25 +2,37 @@
 export interface AttributeType {
   _id: string;
   name: string;
+  code: string;
   description?: string;
   categoryId?: string | { _id: string; name: string };
   isActive: boolean;
   is_multiple: boolean;
+  inputType?: "text" | "number" | "select" | "multiselect" | "boolean" | "date" | "color";
+  helperText?: string;
+  isVariantAttribute?: boolean;
+  displayOrder?: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateAttributeValueItem {
   value: string;
+  label?: string;
+  colorCode?: string;
+  sortOrder?: number;
+  isActive?: boolean;
 }
 
 // Request types
 export interface CreateAttributeTypeRequest {
   name: string;
+  code?: string;
   description?: string;
   categoryId?: string;
   isActive?: boolean;
   is_multiple?: boolean;
+  inputType?: AttributeType["inputType"];
+  helperText?: string;
   values?: CreateAttributeValueItem[];
 }
 

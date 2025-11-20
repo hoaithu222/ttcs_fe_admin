@@ -12,6 +12,7 @@ import userReducer from "@/features/Users/slice/user.slice";
 import homeReducer from "@/features/Home/slice/home.slice";
 import dashboardReducer from "@/features/Dashboard/slice/dashboard.slice";
 import analyticsReducer from "@/features/Analytics/slice/analytics.slice";
+import { walletReducer } from "@/features/Wallet/slice";
 import { AppReducerType } from "./types";
 
 export const rootReducer = combineReducers({
@@ -28,4 +29,5 @@ export const rootReducer = combineReducers({
   home: homeReducer,
   dashboard: dashboardReducer,
   analytics: analyticsReducer,
+  wallet: walletReducer,
 });

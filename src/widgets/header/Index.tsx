@@ -14,18 +14,40 @@ import SearchInput from "@/foundation/components/input/search-input/SearchInput"
 import * as Form from "@radix-ui/react-form";
 import { useNavigate } from "react-router-dom";
 import { NAVIGATION_CONFIG } from "@/app/router/naviagtion.config";
+import { useNotificationCenter } from "@/app/providers/RealtimeProvider";
 
 const Header = () => {
   const { user, onLogout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const navigation = useNavigate();
   const { theme } = useSelector((state: RootState) => themeRootSelector(state));
+  const { notifications, unreadCount, markAllAsRead } = useNotificationCenter();
+
+  const displayedNotifications = notifications.slice(0, 8);
+
+  const formatRelativeTime = (value?: string) => {
+    if (!value) return "";
+    const date = new Date(value);
+    const diffSeconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diffSeconds < 60) return "Vừa xong";
+    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)} phút trước`;
+    if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)} giờ trước`;
+    return date.toLocaleDateString("vi-VN");
+  };
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationOpen(false);
       }
     };
 
@@ -34,6 +56,12 @@ const Header = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (isNotificationOpen && unreadCount > 0) {
+      markAllAsRead();
+    }
+  }, [isNotificationOpen, markAllAsRead, unreadCount]);
 
   const handleLogout = () => {
     onLogout();
@@ -85,10 +113,66 @@ const Header = () => {
         {/* Right side - Actions */}
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <Button variant="ghost" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-          </Button>
+          <div className="relative" ref={notificationRef}>
+            <Button
+              variant="ghost"
+              className="relative"
+              onClick={() => setIsNotificationOpen((prev) => !prev)}
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 px-1 min-w-[1.25rem] h-5 flex justify-center items-center text-xs font-semibold text-white bg-red-500 rounded-full">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </Button>
+
+            {isNotificationOpen && (
+              <div className="absolute right-0 z-50 mt-2 w-80 rounded-lg border border-border-2 bg-white shadow-lg dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex justify-between items-center px-4 py-3 border-b border-border-2">
+                  <p className="text-sm font-semibold">Thông báo</p>
+                  <button
+                    onClick={() => markAllAsRead()}
+                    className="text-xs text-primary-6 hover:underline"
+                  >
+                    Đánh dấu đã đọc
+                  </button>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {displayedNotifications.length === 0 ? (
+                    <p className="px-4 py-6 text-sm text-gray-500">
+                      Chưa có thông báo nào
+                    </p>
+                  ) : (
+                    displayedNotifications.map((notification) => (
+                      <button
+                        key={notification.id}
+                        className="flex flex-col px-4 py-3 w-full text-left hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        onClick={() => {
+                          if (notification.actionUrl) {
+                            navigation(notification.actionUrl);
+                          }
+                          setIsNotificationOpen(false);
+                        }}
+                      >
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
+                          {notification.title || "Thông báo"}
+                        </p>
+                        {notification.content && (
+                          <p className="mt-1 text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
+                            {notification.content}
+                          </p>
+                        )}
+                        <span className="mt-1 text-[11px] text-gray-400">
+                          {formatRelativeTime(notification.createdAt)}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Dark/Light Mode Toggle */}
           <IconButton

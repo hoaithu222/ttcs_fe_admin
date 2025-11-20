@@ -12,6 +12,7 @@ const ShopPage = lazy(() => import("@/features/Shop/page/ShopPage"));
 import CategoriesPage from "@/features/Category/page/CategoryPage";
 import SubCategoriesPage from "@/features/SubCategory/page/SubCategoryPage";
 const AttributesPage = lazy(() => import("@/features/Attribute/pages/AttributePage"));
+const WalletPage = lazy(() => import("@/features/Wallet/pages/WalletPage"));
 const defaultOptions = {
   requireAuth: false,
   hideInMenu: false,
@@ -85,6 +86,12 @@ export const ROUTE = {
   settings: {
     path: NAVIGATION_CONFIG.settings.path,
     element: <SettingsPage />,
+    layout: "main",
+    options: defaultAuthOptions,
+  },
+  wallets: {
+    path: NAVIGATION_CONFIG.wallets.path,
+    element: <WalletPage />,
     layout: "main",
     options: defaultAuthOptions,
   },

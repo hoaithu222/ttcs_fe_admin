@@ -10,7 +10,6 @@ import AttributeValuesListModal from "../components/AttributeValuesListModal";
 import AttributeTypeModal from "../components/AttributeTypeModal";
 import type { AttributeType } from "@/core/api/attribute-type/type";
 import { useAttributeTypeTable } from "../hooks/useAttributeTypeTable";
-import { useAttributeValueTable } from "../hooks/useAttributeValueTable";
 // Avoid Tabs (Radix) for now to prevent optimize-dep crash; use simple toggle instead
 
 const AttributePage: React.FC = () => {

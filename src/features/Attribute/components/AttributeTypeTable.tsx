@@ -7,8 +7,6 @@ import Tooltip from "@/foundation/components/tooltip/Tooltip";
 import { EditIcon, TrashIcon, MousePointerClick } from "lucide-react";
 import type { AttributeType } from "@/core/api/attribute-type/type";
 
-import { useAttributeValueTable } from "../hooks/useAttributeValueTable";
-
 interface Props {
   data: AttributeType[];
   isLoading?: boolean;
@@ -36,8 +34,6 @@ const AttributeTypeTable: React.FC<Props> = ({
   totalItems,
   itemsPerPage = 10,
 }) => {
-  const [expanded, setExpanded] = React.useState<AttributeType | null>(null);
-
   const columns: ColumnWithSummary<AttributeType>[] = [
     {
       id: "name",
@@ -56,6 +52,17 @@ const AttributeTypeTable: React.FC<Props> = ({
       ),
       size: 220,
       meta: { sticky: "left", className: "z-[1]" },
+    },
+    {
+      id: "code",
+      header: "Mã chuẩn",
+      accessorKey: "code",
+      cell: (info) => (
+        <span className="text-xs font-mono text-neutral-7 bg-neutral-2 px-2 py-1 rounded">
+          {info.getValue() as string}
+        </span>
+      ),
+      size: 140,
     },
     {
       id: "categoryId",
@@ -81,6 +88,16 @@ const AttributeTypeTable: React.FC<Props> = ({
         </span>
       ),
       size: 260,
+    },
+    {
+      id: "inputType",
+      header: "Kiểu nhập",
+      accessorKey: "inputType",
+      cell: (info) => (
+        <span className="text-neutral-8 capitalize">{info.getValue()?.toString() || "-"}</span>
+      ),
+      size: 120,
+      meta: { className: "text-center", align: "text-center" },
     },
     {
       id: "is_multiple",
@@ -178,7 +195,6 @@ const AttributeTypeTable: React.FC<Props> = ({
         onPageChange={onPageChange}
         onRowClick={(row) => {
           const item = row as AttributeType;
-          setExpanded((prev) => (prev?._id === item._id ? null : item));
           onSelectType?.(item);
         }}
         page={page}

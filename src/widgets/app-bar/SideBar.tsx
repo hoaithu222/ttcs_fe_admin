@@ -8,10 +8,10 @@ import {
   ShoppingCart,
   FolderOpen,
   BarChart3,
-
   Settings,
   LogOut,
   ShoppingBag,
+  Wallet,
 } from "lucide-react";
 import Button from "@/foundation/components/buttons/Button";
 import ScrollView from "@/foundation/components/scroll/ScrollView";
@@ -32,8 +32,8 @@ const Sidebar = () => {
     { key: "attributes", icon: FolderOpen, path: NAVIGATION_CONFIG.attributes.path },
     { key: "shops", icon: ShoppingBag, path: NAVIGATION_CONFIG.shops.path },
     { key: "analytics", icon: BarChart3, path: NAVIGATION_CONFIG.analytics.path },
+    { key: "wallets", icon: Wallet, path: NAVIGATION_CONFIG.wallets.path },
     { key: "settings", icon: Settings, path: NAVIGATION_CONFIG.settings.path },
-  
   ];
 
   const handleLogout = () => {

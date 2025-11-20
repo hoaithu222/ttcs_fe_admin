@@ -10,6 +10,7 @@ import type {
   CreateAttributeValueRequest,
   UpdateAttributeValueRequest,
 } from "@/core/api/attribute-value/type";
+import { slugify } from "@/shared/utils/slugify";
 
 interface Props {
   open: boolean;
@@ -33,15 +34,29 @@ const AttributeValueModal: React.FC<Props> = ({
 }) => {
   const [form, setForm] = React.useState<CreateAttributeValueRequest>({
     attributeTypeId: attributeType?._id || initialData?.attributeTypeId || "",
+    label: initialData?.label || initialData?.value || "",
     value: initialData?.value || "",
+    colorCode: initialData?.colorCode || "",
+    isActive: initialData?.isActive ?? true,
   });
+  const [isValueManual, setIsValueManual] = React.useState(false);
 
   React.useEffect(() => {
     setForm({
       attributeTypeId: attributeType?._id || initialData?.attributeTypeId || "",
+      label: initialData?.label || initialData?.value || "",
       value: initialData?.value || "",
+      colorCode: initialData?.colorCode || "",
+      isActive: initialData?.isActive ?? true,
     });
+    setIsValueManual(false);
   }, [attributeType, initialData]);
+
+  React.useEffect(() => {
+    if (!isValueManual && form.label) {
+      setForm((prev) => ({ ...prev, value: slugify(prev.label, "_") }));
+    }
+  }, [form.label, isValueManual]);
 
   const handleChange = (key: keyof CreateAttributeValueRequest, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -63,13 +78,43 @@ const AttributeValueModal: React.FC<Props> = ({
               disabled
             />
             <Input
-              name="attrValue-value"
-              label="Giá trị"
-              value={form.value}
+              name="attrValue-label"
+              label="Tên hiển thị"
+              placeholder="vd: Xanh Midnight"
+              value={form.label || ""}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleChange("value", e.target.value)
+                handleChange("label", e.target.value)
               }
               required
+            />
+            <Input
+              name="attrValue-value"
+              label="Mã hệ thống (slug)"
+              value={form.value}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                {
+                  setIsValueManual(true);
+                  handleChange("value", slugify(e.target.value, "_"));
+                }
+              }
+              required
+              placeholder="vd: midnight_blue"
+              description="Tên không dấu để mapping với SKU/SKU seed."
+            />
+            <Input
+              name="attrValue-color"
+              label="Mã màu (tuỳ chọn)"
+              placeholder="#000000 hoặc rgba(...)"
+              value={form.colorCode || ""}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleChange("colorCode", e.target.value)
+              }
+            />
+            <Switch
+              name="attrValue-active"
+              label="Hoạt động"
+              checked={!!form.isActive}
+              onChange={(checked) => handleChange("isActive", !!checked)}
             />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-divider-1">

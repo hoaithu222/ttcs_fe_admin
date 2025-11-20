@@ -9,6 +9,7 @@ import { userSaga } from "@/features/Users/slice/user.saga";
 import { homeSaga } from "@/features/Home/slice/home.saga";
 import { dashboardSaga } from "@/features/Dashboard/slice/dashboard.saga";
 import { analyticsSaga } from "@/features/Analytics/slice/analytics.saga";
+import { walletSaga } from "@/features/Wallet/slice/wallet.saga";
 
 export const rootSage = function* () {
   try {
@@ -23,6 +24,7 @@ export const rootSage = function* () {
       homeSaga(),
       dashboardSaga(),
       analyticsSaga(),
+      walletSaga(),
     ]);
   } catch (error) {
     console.error(error);

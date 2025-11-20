@@ -193,68 +193,7 @@ const TableShop: React.FC<TableShopProps> = ({
       },
       size: 200,
     },
-    {
-      id: "isActive",
-      header: "Hoạt động",
-      accessorKey: "isActive",
-      cell: (info) => {
-        const isActive = info.getValue() as boolean;
-        return (
-          <div className="flex justify-center">
-            <Chip
-              colorClass={
-                isActive ? "bg-success text-white border-none" : "bg-error text-white border-none"
-              }
-              className="shadow-sm transition-all duration-200 hover:shadow-md"
-              rounded="full"
-              size="sm"
-            >
-              <span className="flex items-center gap-1.5">
-                <span className="text-xs">{isActive ? "✓" : "✗"}</span>
-                <span>{isActive ? "Hoạt động" : "Tạm dừng"}</span>
-              </span>
-            </Chip>
-          </div>
-        );
-      },
-      meta: {
-        className: "text-center",
-        align: "text-center",
-      },
-      size: 200,
-    },
-    {
-      id: "isVerified",
-      header: "Xác thực",
-      accessorKey: "isVerified",
-      cell: (info) => {
-        const isVerified = info.getValue() as boolean;
-        return (
-          <div className="flex justify-center">
-            <Chip
-              colorClass={
-                isVerified
-                  ? "bg-blue-500 text-white border-none"
-                  : "bg-neutral-4 text-neutral-10 border-none"
-              }
-              className="shadow-sm transition-all duration-200 hover:shadow-md"
-              rounded="full"
-              size="sm"
-            >
-              <span className="flex items-center gap-1.5">
-                <span className="text-xs">{isVerified ? "✓" : "✗"}</span>
-                <span>{isVerified ? "Đã xác thực" : "Chưa xác thực"}</span>
-              </span>
-            </Chip>
-          </div>
-        );
-      },
-      meta: {
-        className: "text-center",
-        align: "text-center",
-      },
-      size: 220,
-    },
+  
     {
       id: "actions",
       header: "Thao tác",

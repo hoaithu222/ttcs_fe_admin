@@ -33,21 +33,56 @@ const AttributeValueTable: React.FC<Props> = ({
 }) => {
   const columns: ColumnWithSummary<AttributeValue>[] = [
     {
-      id: "value",
-      header: "Giá trị",
-      accessorKey: "value",
+      id: "label",
+      header: "Tên hiển thị",
+      accessorKey: "label",
       cell: (info) => (
         <div className="flex items-center gap-2 max-w-[240px]">
-          <span
-            className="font-semibold text-neutral-10 truncate"
-            title={String(info.getValue() ?? "")}
-          >
-            {info.getValue() as string}
-          </span>
+          <div className="flex flex-col">
+            <span
+              className="font-semibold text-neutral-10 truncate"
+              title={String(info.getValue() ?? "")}
+            >
+              {(info.getValue() as string) || "-"}
+            </span>
+            <span className="text-[11px] font-mono text-neutral-5">
+              {(info.row.original.value as string) || ""}
+            </span>
+          </div>
         </div>
       ),
-      size: 220,
+      size: 240,
       meta: { sticky: "left", className: "z-[1]" },
+    },
+    {
+      id: "colorCode",
+      header: "Màu sắc",
+      accessorKey: "colorCode",
+      cell: (info) =>
+        info.getValue() ? (
+          <div className="flex items-center gap-2">
+            <span
+              className="w-5 h-5 rounded-full border border-border-1"
+              style={{ backgroundColor: info.getValue() as string }}
+            />
+            <span className="text-xs font-mono text-neutral-7">{info.getValue() as string}</span>
+          </div>
+        ) : (
+          <span className="text-neutral-4 text-xs">-</span>
+        ),
+      size: 160,
+    },
+    {
+      id: "isActive",
+      header: "Trạng thái",
+      accessorKey: "isActive",
+      cell: (info) => (
+        <span className={`text-xs font-semibold ${info.getValue() ? "text-success" : "text-error"}`}>
+          {info.getValue() ? "Hoạt động" : "Ẩn"}
+        </span>
+      ),
+      size: 120,
+      meta: { className: "text-center", align: "text-center" },
     },
     {
       id: "createdAt",

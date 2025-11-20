@@ -3,6 +3,10 @@ export interface AttributeValue {
   _id: string;
   attributeTypeId: string;
   value: string;
+  label?: string;
+  colorCode?: string;
+  sortOrder?: number;
+  isActive?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -11,6 +15,10 @@ export interface AttributeValue {
 export interface CreateAttributeValueRequest {
   attributeTypeId: string;
   value: string;
+  label?: string;
+  colorCode?: string;
+  sortOrder?: number;
+  isActive?: boolean;
 }
 
 export interface UpdateAttributeValueRequest extends Partial<CreateAttributeValueRequest> {
