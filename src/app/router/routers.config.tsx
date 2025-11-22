@@ -13,6 +13,7 @@ import CategoriesPage from "@/features/Category/page/CategoryPage";
 import SubCategoriesPage from "@/features/SubCategory/page/SubCategoryPage";
 const AttributesPage = lazy(() => import("@/features/Attribute/pages/AttributePage"));
 const WalletPage = lazy(() => import("@/features/Wallet/pages/WalletPage"));
+const ChatPage = lazy(() => import("@/features/Chat/pages/ChatPage"));
 const defaultOptions = {
   requireAuth: false,
   hideInMenu: false,
@@ -92,6 +93,12 @@ export const ROUTE = {
   wallets: {
     path: NAVIGATION_CONFIG.wallets.path,
     element: <WalletPage />,
+    layout: "main",
+    options: defaultAuthOptions,
+  },
+  chat: {
+    path: NAVIGATION_CONFIG.chat.path,
+    element: <ChatPage />,
     layout: "main",
     options: defaultAuthOptions,
   },

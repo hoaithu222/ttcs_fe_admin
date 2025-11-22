@@ -61,6 +61,13 @@ export interface SendMessageRequest {
   metadata?: Record<string, any>;
 }
 
+export interface CreateConversationRequest {
+  type: "admin" | "shop";
+  targetId?: string; // shopId nếu type là "shop"
+  metadata?: Record<string, any>; // context: productId, orderId, etc.
+  initialMessage?: string;
+}
+
 // Response types
 export interface ConversationListResponse {
   conversations: ChatConversation[];

@@ -1,4 +1,4 @@
-import { Bell, User, LogOut, Settings, ChevronDown, Moon, Sun } from "lucide-react";
+import { Bell, User, LogOut, Settings, ChevronDown, Moon, Sun, MessageSquare } from "lucide-react";
 import Button from "@/foundation/components/buttons/Button";
 import { useAuth } from "@/features/Auth/hooks/useAuth";
 import { useState, useRef, useEffect } from "react";
@@ -212,6 +212,13 @@ const Header = () => {
             )}
           </div>
 
+          {/* Hien thi icon chat */}
+          <IconButton
+            icon={<MessageSquare className="w-5 h-5" />}
+            variant="ghost"
+            tooltip="Chat"
+            onClick={() => navigation(NAVIGATION_CONFIG.chat.path)}
+          />
           {/* Dark/Light Mode Toggle */}
           <IconButton
             icon={theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}

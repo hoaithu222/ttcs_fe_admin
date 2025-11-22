@@ -10,6 +10,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  MessageSquare,
   ShoppingBag,
   Wallet,
 } from "lucide-react";
@@ -33,6 +34,7 @@ const Sidebar = () => {
     { key: "shops", icon: ShoppingBag, path: NAVIGATION_CONFIG.shops.path },
     { key: "analytics", icon: BarChart3, path: NAVIGATION_CONFIG.analytics.path },
     { key: "wallets", icon: Wallet, path: NAVIGATION_CONFIG.wallets.path },
+    { key: "chat", icon: MessageSquare, path: NAVIGATION_CONFIG.chat.path },
     { key: "settings", icon: Settings, path: NAVIGATION_CONFIG.settings.path },
   ];
 
