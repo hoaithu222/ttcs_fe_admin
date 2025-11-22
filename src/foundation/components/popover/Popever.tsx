@@ -146,7 +146,7 @@ const Popover = React.forwardRef<HTMLDivElement, PopoverProps>(
             {showArrow && (
               <RadixPopover.Arrow
                 offset={5}
-                className={clsx(arrowClassName, "fill-background-4")}
+                className={clsx(arrowClassName, "fill-background-2")}
               />
             )}
           </RadixPopover.Content>
