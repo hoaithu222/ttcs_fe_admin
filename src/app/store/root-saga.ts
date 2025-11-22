@@ -10,6 +10,8 @@ import { homeSaga } from "@/features/Home/slice/home.saga";
 import { dashboardSaga } from "@/features/Dashboard/slice/dashboard.saga";
 import { analyticsSaga } from "@/features/Analytics/slice/analytics.saga";
 import { walletSaga } from "@/features/Wallet/slice/wallet.saga";
+import { notificationSaga } from "./slices/notification/notification.saga";
+import { chatSaga } from "./slices/chat/chat.saga";
 
 export const rootSage = function* () {
   try {
@@ -25,6 +27,8 @@ export const rootSage = function* () {
       dashboardSaga(),
       analyticsSaga(),
       walletSaga(),
+      notificationSaga(),
+      chatSaga(),
     ]);
   } catch (error) {
     console.error(error);

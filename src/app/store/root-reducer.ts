@@ -13,6 +13,8 @@ import homeReducer from "@/features/Home/slice/home.slice";
 import dashboardReducer from "@/features/Dashboard/slice/dashboard.slice";
 import analyticsReducer from "@/features/Analytics/slice/analytics.slice";
 import { walletReducer } from "@/features/Wallet/slice";
+import notificationReducer from "./slices/notification/notification.slice";
+import chatReducer from "./slices/chat/chat.slice";
 import { AppReducerType } from "./types";
 
 export const rootReducer = combineReducers({
@@ -30,4 +32,6 @@ export const rootReducer = combineReducers({
   dashboard: dashboardReducer,
   analytics: analyticsReducer,
   wallet: walletReducer,
+  notification: notificationReducer,
+  chat: chatReducer,
 });

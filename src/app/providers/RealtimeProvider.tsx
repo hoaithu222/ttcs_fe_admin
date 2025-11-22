@@ -12,6 +12,9 @@ import { socketClients, SOCKET_EVENTS } from "@/core/socket";
 import { tokenStorage } from "@/core/base";
 import { AUTH_TOKENS_CHANGED_EVENT } from "@/shared/constants/events";
 import { toastUtils } from "@/shared/utils/toast.utils";
+import { useAppDispatch, useAppSelector } from "@/app/store";
+import { updateNotificationFromSocket } from "@/app/store/slices/notification/notification.slice";
+import { updateMessageFromSocket } from "@/app/store/slices/chat/chat.slice";
 
 const MAX_NOTIFICATIONS = 50;
 
@@ -82,6 +85,8 @@ const toRealtimeNotification = (
 };
 
 const RealtimeProvider = ({ children }: PropsWithChildren) => {
+  const dispatch = useAppDispatch();
+  const authUser = useAppSelector((state) => (state as any).auth.user);
   const [hasTokens, setHasTokens] = useState(() => tokenStorage.hasTokens());
   const [notifications, setNotifications] = useState<RealtimeNotification[]>(
     []
@@ -153,10 +158,29 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
       return;
     }
 
-    const socket = socketClients.notifications.connect(true);
+    const socket = socketClients.notifications.connect();
 
     const handleNotification = (payload: Record<string, any>) => {
       addNotification(payload);
+      
+      // Update notification in Redux store
+      dispatch(
+        updateNotificationFromSocket({
+          notification: {
+            _id: payload.notificationId || payload.id || generateNotificationId(),
+            userId: authUser?._id || "",
+            title: payload.title || "",
+            message: payload.content || payload.title || "",
+            type: payload.type || "system",
+            isRead: false,
+            data: payload.metadata || {},
+            actionUrl: payload.actionUrl,
+            createdAt: payload.createdAt || new Date().toISOString(),
+          },
+          notificationId: payload.notificationId || payload.id,
+        })
+      );
+
       const message =
         payload?.content ||
         payload?.title ||
@@ -168,9 +192,53 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
 
     return () => {
       socket.off(SOCKET_EVENTS.NOTIFICATION_SEND, handleNotification);
-      socketClients.notifications.disconnect();
+      socketClients.notifications.disconnect(true);
     };
-  }, [addNotification, hasTokens]);
+  }, [addNotification, hasTokens, dispatch, authUser]);
+
+  // Handle chat socket events
+  useEffect(() => {
+    if (!hasTokens) {
+      socketClients.shopChat?.disconnect(true);
+      socketClients.adminChat?.disconnect(true);
+      socketClients.aiChat?.disconnect(true);
+      return;
+    }
+
+    // Handle admin chat messages
+    const adminChatSocket = socketClients.adminChat?.connect();
+    if (adminChatSocket) {
+      const handleAdminChatMessage = (payload: Record<string, any>) => {
+        if (payload?.conversationId && payload?.message) {
+          dispatch(
+            updateMessageFromSocket({
+              conversationId: payload.conversationId,
+              message: {
+                _id: payload.messageId || payload._id || generateNotificationId(),
+                conversationId: payload.conversationId,
+                senderId: payload.senderId || "",
+                senderName: payload.senderName,
+                senderAvatar: payload.senderAvatar,
+                message: payload.message || "",
+                attachments: payload.attachments,
+                metadata: payload.metadata,
+                isRead: false,
+                isDelivered: false,
+                createdAt: payload.sentAt || payload.createdAt || new Date().toISOString(),
+              },
+            })
+          );
+        }
+      };
+
+      adminChatSocket.on(SOCKET_EVENTS.CHAT_MESSAGE_RECEIVE, handleAdminChatMessage);
+
+      return () => {
+        adminChatSocket.off(SOCKET_EVENTS.CHAT_MESSAGE_RECEIVE, handleAdminChatMessage);
+        socketClients.adminChat?.disconnect(true);
+      };
+    }
+  }, [hasTokens, dispatch]);
 
   const contextValue = useMemo(
     () => ({
