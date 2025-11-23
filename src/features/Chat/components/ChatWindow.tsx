@@ -5,9 +5,17 @@ import {
   selectCurrentConversation,
   selectChatMessages,
   selectChatStatus,
+  selectTypingUsers,
+  selectOnlineUsers,
 } from "@/app/store/slices/chat/chat.selector";
 import { selectUser } from "@/features/Auth/components/slice/auth.selector";
-import { getMessagesStart, markAsReadStart, setCurrentConversation } from "@/app/store/slices/chat/chat.slice";
+import { 
+  getMessagesStart, 
+  markAsReadStart, 
+  setCurrentConversation,
+  setTyping,
+  addOnlineUser,
+} from "@/app/store/slices/chat/chat.slice";
 import { socketClients, SOCKET_EVENTS } from "@/core/socket";
 import ScrollView from "@/foundation/components/scroll/ScrollView";
 import Spinner from "@/foundation/components/feedback/Spinner";
@@ -26,8 +34,15 @@ const ChatWindow: React.FC = () => {
   const status = useAppSelector(selectChatStatus);
   const user = useAppSelector(selectUser);
   const currentUserId = user?._id;
+  const typingUsers = useAppSelector((state) =>
+    currentConversation ? selectTypingUsers(currentConversation._id)(state) : []
+  );
+  const onlineUsers = useAppSelector((state) =>
+    currentConversation ? selectOnlineUsers(currentConversation._id)(state) : []
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<any>(null);
 
   useEffect(() => {
     if (currentConversation) {
@@ -58,14 +73,55 @@ const ChatWindow: React.FC = () => {
 
       if (socketClient) {
         const socket = socketClient.connect();
+        socketRef.current = socket;
         if (socket && socket.connected) {
           socket.emit(SOCKET_EVENTS.CHAT_CONVERSATION_JOIN, {
             conversationId: currentConversation._id,
           });
+          
+          // Listen for typing events
+          socket.on(SOCKET_EVENTS.CHAT_TYPING, (payload: any) => {
+            if (payload?.conversationId === currentConversation._id && payload?.userId !== currentUserId) {
+              dispatch(setTyping({
+                conversationId: payload.conversationId,
+                userId: payload.userId,
+                isTyping: payload.isTyping !== false,
+              }));
+              
+              // Auto clear typing after 3 seconds
+              if (payload.isTyping !== false) {
+                setTimeout(() => {
+                  dispatch(setTyping({
+                    conversationId: payload.conversationId,
+                    userId: payload.userId,
+                    isTyping: false,
+                  }));
+                }, 3000);
+              }
+            }
+          });
+          
+          // Track online users (when user joins conversation, they're online)
+          const otherParticipant = currentConversation.participants.find(
+            (p: { userId: string }) => p.userId !== currentUserId
+          );
+          if (otherParticipant) {
+            dispatch(addOnlineUser({
+              conversationId: currentConversation._id,
+              userId: otherParticipant.userId,
+            }));
+          }
         }
       }
+      
+      return () => {
+        // Cleanup: remove typing and online status when leaving conversation
+        if (socketRef.current) {
+          socketRef.current.off(SOCKET_EVENTS.CHAT_TYPING);
+        }
+      };
     }
-  }, [currentConversation?._id, dispatch]);
+  }, [currentConversation?._id, currentUserId, dispatch]);
 
   // Mark as read only when ChatWindow is actually visible and messages are loaded
   useEffect(() => {
@@ -102,6 +158,9 @@ const ChatWindow: React.FC = () => {
   const otherParticipant = currentConversation.participants.find(
     (p: { userId: string }) => p.userId !== currentUserId
   ) || currentConversation.participants[0];
+  
+  const isOtherUserOnline = otherParticipant && onlineUsers.includes(otherParticipant.userId);
+  const isOtherUserTyping = otherParticipant && typingUsers.includes(otherParticipant.userId);
 
   const handleClose = () => {
     dispatch(setCurrentConversation(null));
@@ -128,7 +187,19 @@ const ChatWindow: React.FC = () => {
           <h3 className="text-base font-semibold text-start text-neutral-10 truncate">
             {otherParticipant?.name || "Người dùng"}
           </h3>
-          <p className="text-xs text-neutral-6 text-start">Đang hoạt động</p>
+          {isOtherUserTyping ? (
+            <p className="text-xs flex items-center gap-1 text-start text-primary-7 italic">
+              <span className="animate-pulse">●</span>
+              <span>Đang nhập...</span>
+            </p>
+          ) : isOtherUserOnline ? (
+            <p className="text-xs flex items-center gap-1 text-start text-success">
+              <span className="block w-2 h-2 bg-success rounded-full animate-pulse"></span>
+              <span>Đang hoạt động</span>
+            </p>
+          ) : (
+            <p className="text-xs text-neutral-6 text-start">Offline</p>
+          )}
         </div>
         <button
           onClick={handleClose}
@@ -168,6 +239,36 @@ const ChatWindow: React.FC = () => {
                   />
                 );
               })}
+              {isOtherUserTyping && (
+                <div className="flex gap-3 mb-3">
+                  {!otherParticipant || otherParticipant.userId === currentUserId ? null : (
+                    <div className="flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-primary-5 to-primary-7 flex items-center justify-center shadow-sm">
+                        {otherParticipant?.avatar ? (
+                          <img
+                            src={otherParticipant.avatar}
+                            alt={otherParticipant.name || "User"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-primary-6 text-white flex items-center justify-center text-sm font-semibold">
+                            {(otherParticipant?.name || "U")[0].toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex flex-col max-w-[75%] sm:max-w-[65%]">
+                    <div className="rounded-2xl px-4 py-2.5 bg-gradient-to-br from-background-2 to-background-1 text-neutral-10 rounded-bl-md border border-neutral-3">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-neutral-6 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-2 h-2 bg-neutral-6 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-2 h-2 bg-neutral-6 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
           </ScrollView>

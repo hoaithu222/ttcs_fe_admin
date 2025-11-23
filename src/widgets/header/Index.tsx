@@ -23,6 +23,8 @@ import {
   markAllAsReadStart,
 } from "@/app/store/slices/notification/notification.slice";
 import { Notification } from "@/core/api/notifications/type";
+import { selectTotalUnreadCount } from "@/app/store/slices/chat/chat.selector";
+import { getConversationsStart } from "@/app/store/slices/chat/chat.slice";
 
 const Header = () => {
   const { user, onLogout } = useAuth();
@@ -37,6 +39,9 @@ const Header = () => {
   // Get notifications from Redux slice
   const notifications = useAppSelector(selectNotifications);
   const unreadCount = useAppSelector(selectUnreadCount);
+  
+  // Get chat unread count
+  const chatUnreadCount = useAppSelector(selectTotalUnreadCount);
 
   const displayedNotifications = notifications.slice(0, 8);
 
@@ -44,6 +49,13 @@ const Header = () => {
   useEffect(() => {
     dispatch(getNotificationsStart({ query: { page: 1, limit: 10 } }));
   }, [dispatch]);
+
+  // Load conversations when component mounts
+  useEffect(() => {
+    if (user?._id) {
+      dispatch(getConversationsStart({ query: { page: 1, limit: 50 } }));
+    }
+  }, [dispatch, user?._id]);
 
   const formatRelativeTime = (value?: string) => {
     if (!value) return "";
@@ -213,12 +225,19 @@ const Header = () => {
           </div>
 
           {/* Hien thi icon chat */}
-          <IconButton
-            icon={<MessageSquare className="w-5 h-5" />}
-            variant="ghost"
-            tooltip="Chat"
-            onClick={() => navigation(NAVIGATION_CONFIG.chat.path)}
-          />
+          <div className="relative">
+            <IconButton
+              icon={<MessageSquare className="w-5 h-5" />}
+              variant="ghost"
+              tooltip="Chat"
+              onClick={() => navigation(NAVIGATION_CONFIG.chat.path)}
+            />
+            {chatUnreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold text-white bg-error rounded-full">
+                {chatUnreadCount > 9 ? "9+" : chatUnreadCount}
+              </span>
+            )}
+          </div>
           {/* Dark/Light Mode Toggle */}
           <IconButton
             icon={theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}

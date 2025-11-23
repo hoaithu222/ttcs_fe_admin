@@ -43,6 +43,8 @@ const initialState: ChatState = {
     error: null,
     message: null,
   },
+  typing: {}, // conversationId -> userIds who are typing
+  onlineUsers: {}, // conversationId -> userIds who are online
 };
 
 const chatSlice = createSlice({
@@ -63,7 +65,36 @@ const chatSlice = createSlice({
       action: PayloadAction<ConversationListResponse>
     ) => {
       state.getConversations.status = ReduxStateType.SUCCESS;
-      state.conversations = action.payload.conversations;
+      
+      // Update conversations while preserving unreadCount for currently viewing conversation
+      const newConversations = action.payload.conversations;
+      const currentlyViewingId = state.currentConversation?._id;
+      
+      state.conversations = newConversations.map((newConv) => {
+        // If this is the currently viewing conversation, always set unreadCount to 0
+        if (currentlyViewingId && newConv._id === currentlyViewingId) {
+          return {
+            ...newConv,
+            unreadCount: 0, // Reset unread count when viewing
+          };
+        }
+        // Otherwise, use unreadCount from backend (already calculated correctly)
+        return newConv;
+      });
+      
+      // Also update current conversation's unread count if it exists in the list
+      if (currentlyViewingId) {
+        const currentInList = state.conversations.find(
+          (c) => c._id === currentlyViewingId
+        );
+        if (currentInList && state.currentConversation) {
+          state.currentConversation = {
+            ...currentInList,
+            unreadCount: 0,
+          };
+        }
+      }
+      
       state.pagination = action.payload.pagination;
       state.getConversations.error = null;
       state.getConversations.message = null;
@@ -80,7 +111,36 @@ const chatSlice = createSlice({
       state,
       action: PayloadAction<ChatConversation | null>
     ) => {
-      state.currentConversation = action.payload;
+      const newConversation = action.payload;
+      
+      // DON'T reset unread count of previous conversation when switching
+      // The previous conversation's unread count should remain until user actually reads it
+      
+      // Set new current conversation and reset its unread count
+      if (newConversation) {
+        // Find conversation in list to get latest data
+        const conversationIndex = state.conversations.findIndex(
+          (c) => c._id === newConversation._id
+        );
+        
+        // Use conversation from list if exists, otherwise use the one passed in
+        const conversationToSet = conversationIndex !== -1 
+          ? state.conversations[conversationIndex]
+          : newConversation;
+        
+        // Set current conversation with unreadCount = 0 (user is viewing it)
+        state.currentConversation = {
+          ...conversationToSet,
+          unreadCount: 0, // Reset unread count when viewing
+        };
+        
+        // Also update in conversations list - set unreadCount to 0 for the one being viewed
+        if (conversationIndex !== -1) {
+          state.conversations[conversationIndex].unreadCount = 0;
+        }
+      } else {
+        state.currentConversation = null;
+      }
     },
 
     // Get Messages
@@ -189,27 +249,28 @@ const chatSlice = createSlice({
       const conversationIndex = state.conversations.findIndex(
         (c) => c._id === conversationId
       );
+      
+      const isCurrentlyViewing = state.currentConversation?._id === conversationId;
+      
       if (conversationIndex !== -1) {
         state.conversations[conversationIndex].lastMessage = message;
         state.conversations[conversationIndex].updatedAt = message.createdAt;
-        // Only increment unread count if message is not from current user and conversation is not currently viewed
-        if (!isSender && state.currentConversation?._id !== conversationId) {
-          state.conversations[conversationIndex].unreadCount = 
-            (state.conversations[conversationIndex].unreadCount || 0) + 1;
-        } else if (!isSender && state.currentConversation?._id === conversationId) {
-          // If viewing the conversation, don't increment unread count
+        
+        // Don't manually update unreadCount here - wait for backend to send conversation update
+        // Backend will send correct unreadCount via updateConversationFromSocket
+        // Only reset to 0 if currently viewing (user is actively reading)
+        if (isCurrentlyViewing) {
           state.conversations[conversationIndex].unreadCount = 0;
         }
+        // If not viewing and message is from others, backend will send conversation update with correct unreadCount
       }
 
       // Update current conversation if it matches
-      if (state.currentConversation?._id === conversationId) {
+      if (isCurrentlyViewing && state.currentConversation) {
         state.currentConversation.lastMessage = message;
         state.currentConversation.updatedAt = message.createdAt;
-        // Reset unread count when viewing conversation
-        if (!isSender) {
-          state.currentConversation.unreadCount = 0;
-        }
+        // Always reset unread count to 0 when viewing conversation
+        state.currentConversation.unreadCount = 0;
       }
     },
 
@@ -225,18 +286,46 @@ const chatSlice = createSlice({
         (c) => c._id === conversation._id
       );
 
+      const isCurrentlyViewing = state.currentConversation?._id === conversation._id;
+      
       if (conversationIndex !== -1) {
-        // Update existing conversation (preserve unreadCount if viewing)
-        const isCurrentlyViewing = state.currentConversation?._id === conversation._id;
-        const currentUnreadCount = state.conversations[conversationIndex].unreadCount || 0;
+        // Update existing conversation
+        // Backend now sends correct unreadCountMe and unreadCountTo for current user via direct room
+        // Trust the backend's calculation
+        let finalUnreadCountMe = conversation.unreadCountMe ?? conversation.unreadCount ?? 0;
+        const finalUnreadCountTo = conversation.unreadCountTo ?? 0;
+        
+        // If viewing, always reset unreadCountMe to 0 (user is actively viewing, so no unread)
+        if (isCurrentlyViewing) {
+          finalUnreadCountMe = 0;
+        }
+        
         state.conversations[conversationIndex] = {
           ...conversation,
-          // Don't override unreadCount if we're viewing this conversation
-          unreadCount: isCurrentlyViewing ? 0 : (conversation.unreadCount || currentUnreadCount),
+          unreadCountMe: finalUnreadCountMe,
+          unreadCountTo: finalUnreadCountTo,
+          unreadCount: finalUnreadCountMe, // Backward compatibility
         };
       } else {
         // Add new conversation at the beginning
-        state.conversations.unshift(conversation);
+        // Ensure unreadCountMe and unreadCountTo are set correctly
+        const unreadCountMe = conversation.unreadCountMe ?? conversation.unreadCount ?? 0;
+        const unreadCountTo = conversation.unreadCountTo ?? 0;
+        
+        const newConversation = isCurrentlyViewing
+          ? { 
+              ...conversation, 
+              unreadCountMe: 0, 
+              unreadCountTo: unreadCountTo, // Keep unreadCountTo even when viewing
+              unreadCount: 0 
+            }
+          : { 
+              ...conversation, 
+              unreadCountMe: unreadCountMe,
+              unreadCountTo: unreadCountTo,
+              unreadCount: unreadCountMe 
+            };
+        state.conversations.unshift(newConversation);
       }
 
       // Sort conversations by lastMessageAt or updatedAt (newest first)
@@ -247,10 +336,13 @@ const chatSlice = createSlice({
       });
 
       // Update current conversation if it matches
-      if (state.currentConversation?._id === conversation._id) {
+      if (isCurrentlyViewing && state.currentConversation) {
+        const unreadCountTo = conversation.unreadCountTo ?? 0;
         state.currentConversation = {
           ...conversation,
-          unreadCount: 0, // Reset unread count when viewing
+          unreadCountMe: 0, // Always reset unread count when viewing
+          unreadCountTo: unreadCountTo, // Keep unreadCountTo even when viewing
+          unreadCount: 0, // Backward compatibility
         };
       }
     },
@@ -417,6 +509,59 @@ const chatSlice = createSlice({
       state.markAsRead.message = action.payload;
     },
 
+    // Typing indicators
+    setTyping: (
+      state,
+      action: PayloadAction<{ conversationId: string; userId: string; isTyping: boolean }>
+    ) => {
+      const { conversationId, userId, isTyping } = action.payload;
+      if (!state.typing[conversationId]) {
+        state.typing[conversationId] = [];
+      }
+      if (isTyping) {
+        if (!state.typing[conversationId].includes(userId)) {
+          state.typing[conversationId].push(userId);
+        }
+      } else {
+        state.typing[conversationId] = state.typing[conversationId].filter(
+          (id) => id !== userId
+        );
+      }
+    },
+    
+    // Online users
+    setOnlineUsers: (
+      state,
+      action: PayloadAction<{ conversationId: string; userIds: string[] }>
+    ) => {
+      state.onlineUsers[action.payload.conversationId] = action.payload.userIds;
+    },
+    
+    addOnlineUser: (
+      state,
+      action: PayloadAction<{ conversationId: string; userId: string }>
+    ) => {
+      const { conversationId, userId } = action.payload;
+      if (!state.onlineUsers[conversationId]) {
+        state.onlineUsers[conversationId] = [];
+      }
+      if (!state.onlineUsers[conversationId].includes(userId)) {
+        state.onlineUsers[conversationId].push(userId);
+      }
+    },
+    
+    removeOnlineUser: (
+      state,
+      action: PayloadAction<{ conversationId: string; userId: string }>
+    ) => {
+      const { conversationId, userId } = action.payload;
+      if (state.onlineUsers[conversationId]) {
+        state.onlineUsers[conversationId] = state.onlineUsers[conversationId].filter(
+          (id) => id !== userId
+        );
+      }
+    },
+
     // Reset state
     resetChatState: () => initialState,
   },
@@ -440,6 +585,10 @@ export const {
   markAsReadStart,
   markAsReadSuccess,
   markAsReadFailure,
+  setTyping,
+  setOnlineUsers,
+  addOnlineUser,
+  removeOnlineUser,
   resetChatState,
 } = chatSlice.actions;
 

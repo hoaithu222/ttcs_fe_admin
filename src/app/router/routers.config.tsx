@@ -14,6 +14,7 @@ import SubCategoriesPage from "@/features/SubCategory/page/SubCategoryPage";
 const AttributesPage = lazy(() => import("@/features/Attribute/pages/AttributePage"));
 const WalletPage = lazy(() => import("@/features/Wallet/pages/WalletPage"));
 const ChatPage = lazy(() => import("@/features/Chat/pages/ChatPage"));
+const HomeConfigurationPage = lazy(() => import("@/features/Home/pages/HomeConfigurationPage"));
 const defaultOptions = {
   requireAuth: false,
   hideInMenu: false,
@@ -25,8 +26,8 @@ const defaultAuthOptions = {
 
 export const ROUTE = {
   home: {
-    path: NAVIGATION_CONFIG.home.path,
-    element: <HomePage />,
+    path: NAVIGATION_CONFIG.homeConfiguration.path,
+    element: <HomeConfigurationPage />,
     layout: "main",
     options: defaultAuthOptions,
   },
@@ -102,6 +103,12 @@ export const ROUTE = {
     layout: "main",
     options: defaultAuthOptions,
   },
+  // homeConfiguration: {
+  //   path: NAVIGATION_CONFIG.homeConfiguration.path,
+  //   element: <HomeConfigurationPage />,
+  //   layout: "main",
+  //   options: defaultAuthOptions,
+  // },
 } satisfies Record<
   string,
   {

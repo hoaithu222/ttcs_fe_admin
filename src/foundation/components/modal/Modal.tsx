@@ -165,7 +165,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     const { t: tCommon } = useTranslation("common");
 
     const contentStyles = clsx(
-      "shadow-1 fixed left-1/2 top-1/2 z-50 flex origin-center -translate-x-1/2 border-divider-1 -translate-y-1/2 flex-col rounded-xl border bg-background-2 focus:outline-none",
+      "shadow-1 fixed left-1/2 top-1/2 z-50 flex origin-center -translate-x-1/2 border-divider-1 -translate-y-1/2 flex-col rounded-xl border bg-modal-bg focus:outline-none",
       sizeClasses[size],
       contentClassName,
       padding
@@ -204,7 +204,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           {showCloseIcon && (
             <div className={clsx(closeIconWrapperClassName)}>
               <Dialog.Close asChild>
-                <X className="text-neutral-6 dark:text-white" />
+                <X className="text-neutral-6 dark:text-neutral-0" />
               </Dialog.Close>
             </div>
           )}
@@ -213,7 +213,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     };
 
     const classOverlay = clsx(
-      "bg-base-black/50 fixed inset-0 z-40 backdrop-blur-sm transition-opacity",
+      "bg-modal-overlay fixed inset-0 z-40 backdrop-blur-sm transition-opacity",
       "data-[state=open]:animate-in data-[state=open]:fade-in",
       "data-[state=closed]:animate-out data-[state=closed]:fade-out"
     );

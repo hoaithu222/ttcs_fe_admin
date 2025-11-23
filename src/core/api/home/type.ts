@@ -8,6 +8,98 @@ export interface Banner {
   isActive: boolean;
 }
 
+// Home Configuration types
+export interface BannerImage {
+  url: string;
+  publicId: string;
+}
+
+export interface MainBanner {
+  _id?: string;
+  image: BannerImage;
+  title?: string;
+  description?: string;
+  link?: string;
+  order?: number;
+  isActive?: boolean;
+}
+
+export interface SideBanner {
+  _id?: string;
+  categoryId: string;
+  category?: {
+    _id: string;
+    name: string;
+    image_Background?: BannerImage;
+  };
+  image?: BannerImage; // Auto-populated from category.image_Background
+  order?: number;
+  isActive?: boolean;
+}
+
+export interface Feature {
+  icon: string;
+  text: string;
+  iconBg: string;
+  hoverColor: string;
+  order?: number;
+  isActive?: boolean;
+}
+
+export interface HomeConfigurationSettings {
+  autoSlideInterval?: number;
+  showCounter?: boolean;
+  showDots?: boolean;
+}
+
+export type DisplayType = "default" | "compact" | "modern" | "classic";
+
+export interface HomeConfiguration {
+  _id: string;
+  mainBanners: MainBanner[];
+  sideBanners: SideBanner[];
+  features: Feature[];
+  settings: HomeConfigurationSettings;
+  isActive: boolean;
+  displayType?: DisplayType;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateBannerRequest {
+  image: BannerImage;
+  title?: string;
+  description?: string;
+  link?: string;
+  order?: number;
+  isActive?: boolean;
+}
+
+export interface CreateSideBannerRequest {
+  categoryId: string;
+  order?: number;
+  isActive?: boolean;
+}
+
+export interface CreateFeatureRequest {
+  icon: string;
+  text: string;
+  iconBg: string;
+  hoverColor: string;
+  order?: number;
+  isActive?: boolean;
+}
+
+export interface CreateHomeConfigurationRequest {
+  mainBanners?: CreateBannerRequest[];
+  sideBanners?: CreateSideBannerRequest[];
+  features?: CreateFeatureRequest[];
+  settings?: HomeConfigurationSettings;
+  isActive?: boolean;
+}
+
+export interface UpdateHomeConfigurationRequest extends CreateHomeConfigurationRequest {}
+
 export interface HomeProduct {
   _id: string;
   name: string;
@@ -69,7 +161,10 @@ export interface SearchSuggestionQuery {
 
 // Response types
 export interface BannerResponse {
-  banners: Banner[];
+  mainBanners: MainBanner[];
+  sideBanners: SideBanner[];
+  features: Feature[];
+  settings: HomeConfigurationSettings;
 }
 
 export interface HomeCategoriesResponse {

@@ -198,7 +198,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
       if (groups) {
         return groups.map((group) => (
           <React.Fragment key={group.label}>
-            <SelectPrimitive.Label className="px-3 py-1 text-neutral-9">
+            <SelectPrimitive.Label className="px-3 py-1 text-select-text-value">
               {group.label}
             </SelectPrimitive.Label>
             {group.options.map((opt) => (
@@ -207,7 +207,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                 value={opt.value}
                 className={clsx(
                   "flex relative items-center px-3 py-2 outline-none select-none",
-                  "text-neutral-9 hover:bg-background-2 focus:bg-background-2",
+                  "text-select-text-value hover:bg-select-item-hover focus:bg-select-item-hover data-[highlighted]:bg-select-item-hover data-[state=checked]:bg-select-item-selected data-[state=checked]:text-select-item-selected-text",
                   itemClassName
                 )}
                 data-testid={`${testId}-item-${opt.value}`}
@@ -224,7 +224,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
           value={opt.value}
           className={clsx(
             "relative flex select-none items-center px-3 py-2 outline-none",
-            "text-neutral-9 hover:bg-background-2 focus:bg-background-2",
+            "text-select-text-value hover:bg-select-item-hover focus:bg-select-item-hover data-[highlighted]:bg-select-item-hover data-[state=checked]:bg-select-item-selected data-[state=checked]:text-select-item-selected-text",
             `${opt.value === valueFilter && "hidden"}`,
             itemClassName
           )}
@@ -273,7 +273,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
               <div className="flex gap-1 items-center mb-1">
                 <Form.Label htmlFor={selectId} className="block text-neutral-9">
                   {label}
-                  {required && <span className="text-red-5">*</span>}
+                  {required && <span className="text-error">*</span>}
                 </Form.Label>
                 {messTooltip && (
                   <Tooltip content={messTooltip} side="bottom">
@@ -314,7 +314,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                       className={clsx(
                         "text-left bg-transparent outline-none",
                         placeholderClassName,
-                        normalizedValue ? `${activeClassName} text-neutral-9` : "text-neutral-6",
+                        normalizedValue ? `${activeClassName} text-select-text-value` : "text-input-placeholder",
                         truncatePlaceholder ? "truncate" : "whitespace-nowrap"
                       )}
                     >
@@ -331,7 +331,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                       className={clsx(
                         "text-left bg-transparent outline-none",
                         placeholderClassName,
-                        normalizedValue ? `${activeClassName} text-neutral-9` : "text-neutral-6",
+                        normalizedValue ? `${activeClassName} text-select-text-value` : "text-input-placeholder",
                         truncatePlaceholder ? "truncate" : "whitespace-nowrap"
                       )}
                     >
@@ -346,7 +346,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                     <Icon
                       name="CloseOutlined"
                       size={sizeIcon}
-                      className="cursor-pointer text-neutral-6"
+                      className="cursor-pointer text-input-placeholder"
                       onClick={() => {
                         onValueChange?.("");
                       }}
@@ -355,7 +355,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                     <span className="shrink-0">{iconRight}</span>
                   ) : (
                     <SelectPrimitive.Icon>
-                      <ArrowDownNarrowWideIcon className="w-5 h-5 text-neutral-6" />
+                      <ArrowDownNarrowWideIcon className="w-5 h-5 text-input-placeholder" />
                     </SelectPrimitive.Icon>
                   )}
                 </div>
@@ -369,7 +369,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
             <SelectPrimitive.Portal>
               <SelectPrimitive.Content
                 className={clsx(
-                  "z-[85] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md bg-background-1 text-neutral-9 shadow-lg border border-divider-1",
+                  "z-[85] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md bg-select-menu-bg text-select-text-value shadow-lg border border-select-border",
                   textSize === "small"
                     ? TEXT_SIZE.small
                     : textSize === "large"
@@ -398,7 +398,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                 )}
                 <SelectPrimitive.Viewport className={clsx("w-full", customHeight)}>
                   {loadingOptions ? (
-                    <div className="px-3 py-2 text-center text-caption-12 text-neutral-9">
+                    <div className="px-3 py-2 text-center text-caption-12 text-select-text-value">
                       {t("common.loading")}
                     </div>
                   ) : (
@@ -409,7 +409,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
             </SelectPrimitive.Portal>
 
             {description && (
-              <p id={descriptionId} className="mt-1 text-caption-12 text-neutral-7">
+              <p id={descriptionId} className="mt-1 text-caption-12 text-input-label">
                 {description}
               </p>
             )}

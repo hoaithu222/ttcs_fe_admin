@@ -23,7 +23,7 @@ const Sidebar = () => {
   const { onLogout } = useAuth();
 
   const menuItems = [
-    { key: "home", icon: Home, path: NAVIGATION_CONFIG.home.path },
+    { key: "homeConfiguration", icon: Home, path: NAVIGATION_CONFIG.homeConfiguration.path },
     { key: "dashboard", icon: LayoutDashboard, path: NAVIGATION_CONFIG.dashboard.path },
     { key: "users", icon: Users, path: NAVIGATION_CONFIG.users.path },
     // { key: "products", icon: Package, path: NAVIGATION_CONFIG.products.path },

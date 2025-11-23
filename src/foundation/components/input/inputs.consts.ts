@@ -203,10 +203,10 @@ export const getSizeClass = (size: string): string => {
 
 // Base CSS classes using design system colors
 export const BASE_INPUT_CLASS =
-  "w-full px-3 py-2 border border-neutral-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-6 focus:border-primary-6 bg-background-input hover:border-neutral-5 transition-colors";
+  "w-full px-3 py-2 border border-input-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-6 focus:border-input-border-focus bg-input-bg hover:border-input-border-focus transition-colors";
 export const BASE_INPUT_CLASS_ACTION =
-  "w-full px-3 py-2 border border-neutral-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-6 focus:border-primary-6 bg-background-input hover:border-neutral-5 transition-colors";
+  "w-full px-3 py-2 border border-input-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-6 focus:border-input-border-focus bg-input-bg hover:border-input-border-focus transition-colors";
 export const BASE_POSITION_CLASS = "relative flex items-center";
-export const DISABLED_INPUT_CLASS = "opacity-50 cursor-not-allowed bg-neutral-1";
+export const DISABLED_INPUT_CLASS = "opacity-50 cursor-not-allowed bg-input-bg-disabled";
 export const ERROR_INPUT_CLASS = "border-error focus:ring-error focus:border-error";
 export const ERROR_TEXT_CLASS = "text-error text-caption-12 mt-1";

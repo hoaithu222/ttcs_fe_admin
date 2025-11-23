@@ -322,7 +322,7 @@ const Input = React.forwardRef<HTMLInputElement, FieldInputProps>(
                 className={clsx(
                   "p-0 bg-transparent border-none outline-none size-full focus:ring-0",
                   textClass,
-                  "text-neutral-9 placeholder:text-neutral-4",
+                  "text-input-text placeholder:text-input-placeholder",
                   inputCustomClass
                 )}
                 onKeyDown={handleKeyDown}

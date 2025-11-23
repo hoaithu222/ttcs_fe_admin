@@ -245,13 +245,45 @@ const ConversationsList: React.FC = () => {
             )}
           </div>
           <div className="flex items-center justify-between">
-            <p className={clsx(
-              "text-sm truncate",
-              isActive ? "text-neutral-8" : "text-neutral-7",
-              hasUnread && !isActive && "font-medium text-neutral-9"
-            )}>
-              {conversation.lastMessage?.message || "Chưa có tin nhắn"}
-            </p>
+            {(() => {
+              const lastMessage = conversation.lastMessage;
+              const hasText = lastMessage?.message && typeof lastMessage.message === 'string' && lastMessage.message.trim();
+              const hasImageAttachments = lastMessage?.attachments && lastMessage.attachments.some(att => att.type?.startsWith("image/"));
+              const firstImage = lastMessage?.attachments?.find(att => att.type?.startsWith("image/"));
+              
+              // If only images (no text), show image preview
+              if (!hasText && hasImageAttachments && firstImage) {
+                return (
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-neutral-3">
+                      <Image
+                        src={firstImage.url}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className={clsx(
+                      "text-sm truncate",
+                      isActive ? "text-neutral-8" : "text-neutral-7",
+                      hasUnread && !isActive && "font-medium text-neutral-9"
+                    )}>
+                      📷 Ảnh
+                    </span>
+                  </div>
+                );
+              }
+              
+              // If has text or no message, show text
+              return (
+                <p className={clsx(
+                  "text-sm truncate",
+                  isActive ? "text-neutral-8" : "text-neutral-7",
+                  hasUnread && !isActive && "font-medium text-neutral-9"
+                )}>
+                  {hasText ? lastMessage.message : "Chưa có tin nhắn"}
+                </p>
+              );
+            })()}
           </div>
         </div>
       </div>

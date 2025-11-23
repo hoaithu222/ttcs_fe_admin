@@ -7,6 +7,7 @@ import { attributeValueSaga } from "@/features/Attribute/slice/attributeValue.sa
 import { shopSaga } from "@/features/Shop/slice/Shop.saga";
 import { userSaga } from "@/features/Users/slice/user.saga";
 import { homeSaga } from "@/features/Home/slice/home.saga";
+import { homeConfigurationSaga } from "@/features/Home/slice/home-configuration.saga";
 import { dashboardSaga } from "@/features/Dashboard/slice/dashboard.saga";
 import { analyticsSaga } from "@/features/Analytics/slice/analytics.saga";
 import { walletSaga } from "@/features/Wallet/slice/wallet.saga";
@@ -24,6 +25,7 @@ export const rootSage = function* () {
       shopSaga(),
       userSaga(),
       homeSaga(),
+      homeConfigurationSaga(),
       dashboardSaga(),
       analyticsSaga(),
       walletSaga(),

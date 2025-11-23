@@ -1,4 +1,4 @@
-import { HOME_ENDPOINTS } from "./path";
+import { HOME_ENDPOINTS, buildEndpoint } from "./path";
 import type {
   BannerResponse,
   HomeCategoriesResponse,
@@ -6,6 +6,9 @@ import type {
   HomeShopsResponse,
   HomeQuery,
   SearchSuggestionQuery,
+  HomeConfiguration,
+  CreateHomeConfigurationRequest,
+  UpdateHomeConfigurationRequest,
   ApiSuccess,
 } from "./type";
 import { VpsHttpClient } from "@/core/base/http-client";
@@ -52,6 +55,52 @@ class HomeApiService extends VpsHttpClient {
     query: SearchSuggestionQuery
   ): Promise<ApiSuccess<HomeProductsResponse>> {
     const response = await this.get(HOME_ENDPOINTS.SEARCH_SUGGESTION, { params: query });
+    return response.data;
+  }
+
+  // Home Configuration APIs (Admin only)
+  
+  // Get active configuration (public)
+  async getActiveConfiguration(): Promise<ApiSuccess<HomeConfiguration>> {
+    const response = await this.get(HOME_ENDPOINTS.CONFIGURATION);
+    return response.data;
+  }
+
+  // Get all configurations (admin)
+  async getAllConfigurations(): Promise<ApiSuccess<{ configurations: HomeConfiguration[] }>> {
+    const response = await this.get(HOME_ENDPOINTS.ADMIN_CONFIGURATION);
+    return response.data;
+  }
+
+  // Get configuration by ID (admin)
+  async getConfigurationById(id: string): Promise<ApiSuccess<HomeConfiguration>> {
+    const endpoint = buildEndpoint(HOME_ENDPOINTS.ADMIN_CONFIGURATION_DETAIL, { id });
+    const response = await this.get(endpoint);
+    return response.data;
+  }
+
+  // Create configuration (admin)
+  async createConfiguration(
+    data: CreateHomeConfigurationRequest
+  ): Promise<ApiSuccess<HomeConfiguration>> {
+    const response = await this.post(HOME_ENDPOINTS.ADMIN_CONFIGURATION, data);
+    return response.data;
+  }
+
+  // Update configuration (admin)
+  async updateConfiguration(
+    id: string,
+    data: UpdateHomeConfigurationRequest
+  ): Promise<ApiSuccess<HomeConfiguration>> {
+    const endpoint = buildEndpoint(HOME_ENDPOINTS.ADMIN_CONFIGURATION_DETAIL, { id });
+    const response = await this.put(endpoint, data);
+    return response.data;
+  }
+
+  // Delete configuration (admin)
+  async deleteConfiguration(id: string): Promise<ApiSuccess<void>> {
+    const endpoint = buildEndpoint(HOME_ENDPOINTS.ADMIN_CONFIGURATION_DETAIL, { id });
+    const response = await this.delete(endpoint);
     return response.data;
   }
 }

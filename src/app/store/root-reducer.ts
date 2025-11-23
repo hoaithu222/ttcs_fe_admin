@@ -10,6 +10,7 @@ import attributeValueReducer from "@/features/Attribute/slice/attributeValue.sli
 import shopReducer from "@/features/Shop/slice/Shop.slice";
 import userReducer from "@/features/Users/slice/user.slice";
 import homeReducer from "@/features/Home/slice/home.slice";
+import homeConfigurationReducer from "@/features/Home/slice/home-configuration.slice";
 import dashboardReducer from "@/features/Dashboard/slice/dashboard.slice";
 import analyticsReducer from "@/features/Analytics/slice/analytics.slice";
 import { walletReducer } from "@/features/Wallet/slice";
@@ -29,6 +30,7 @@ export const rootReducer = combineReducers({
   shop: shopReducer,
   user: userReducer,
   home: homeReducer,
+  homeConfiguration: homeConfigurationReducer,
   dashboard: dashboardReducer,
   analytics: analyticsReducer,
   wallet: walletReducer,

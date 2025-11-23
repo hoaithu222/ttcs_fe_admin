@@ -6,11 +6,11 @@ export interface NavigationConfig {
   requireAuth: boolean;
 }
 export const NAVIGATION_CONFIG: Record<string, NavigationConfig> = {
-  home: {
-    path: "/",
-    name: "Home",
-    requireAuth: true,
-  },
+  // home: {
+  //   path: "/",
+  //   name: "Home",
+  //   requireAuth: true,
+  // },
   login: {
     path: "/login",
     name: "Login",
@@ -74,6 +74,11 @@ export const NAVIGATION_CONFIG: Record<string, NavigationConfig> = {
   chat: {
     path: "/chat",
     name: "Chat",
+    requireAuth: true,
+  },
+  homeConfiguration: {
+    path: "/",
+    name: "Home Configuration",
     requireAuth: true,
   },
 } satisfies Record<string, NavigationConfig>;

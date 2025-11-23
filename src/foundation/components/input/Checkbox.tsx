@@ -153,7 +153,7 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
           )}
         </div>
         {error && (
-          <span className="mt-1 text-caption-12 text-red-5" data-testid={`${testId}-error`}>
+          <span className="mt-1 text-caption-12 text-error" data-testid={`${testId}-error`}>
             {error}
           </span>
         )}

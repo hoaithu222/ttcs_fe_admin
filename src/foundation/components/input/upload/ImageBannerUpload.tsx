@@ -141,7 +141,7 @@ const ImageBannerUpdate: React.FC<ImageBannerUpdateProps> = ({
           <div className="relative group">
             <div
               className={clsx(
-                "relative overflow-hidden rounded-2xl border-2 border-gray-200 shadow-md transition-all duration-300",
+                "relative overflow-hidden rounded-2xl border-2 border-border-2 shadow-md transition-all duration-300",
                 !disabled && "hover:shadow-xl hover:border-blue-300",
                 aspectRatioClasses[aspectRatio]
               )}
@@ -157,11 +157,11 @@ const ImageBannerUpdate: React.FC<ImageBannerUpdateProps> = ({
 
               {/* Overlay Actions */}
               {!disabled && showPreviewOverlay && (
-                <div className="flex absolute inset-0 gap-3 justify-center items-center opacity-0 transition-all duration-300 bg-gradient-to-t from-black/80 via-black/50 to-black/30 backdrop-blur-[2px] group-hover:opacity-100">
+                <div className="flex absolute inset-0 gap-3 justify-center items-center opacity-0 transition-all duration-300 bg-gradient-to-t from-overlay via-overlay/50 to-overlay/30 backdrop-blur-[2px] group-hover:opacity-100">
                   <button
                     type="button"
                     onClick={handleClick}
-                    className="flex gap-2 items-center px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl shadow-lg transition-all duration-200 hover:bg-blue-700 hover:scale-105 active:scale-95"
+                    className="flex gap-2 items-center px-5 py-2.5 text-sm font-semibold text-neutral-0 bg-primary-6 rounded-xl shadow-lg transition-all duration-200 hover:bg-primary-7 hover:scale-105 active:scale-95"
                     data-testid={`${testId}-change`}
                   >
                     <ImageIcon className="w-4 h-4" />
@@ -170,7 +170,7 @@ const ImageBannerUpdate: React.FC<ImageBannerUpdateProps> = ({
                   <button
                     type="button"
                     onClick={handleRemove}
-                    className="flex gap-2 items-center px-5 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-xl shadow-lg transition-all duration-200 hover:bg-red-600 hover:scale-105 active:scale-95"
+                    className="flex gap-2 items-center px-5 py-2.5 text-sm font-semibold text-neutral-0 bg-error rounded-xl shadow-lg transition-all duration-200 hover:bg-error/90 hover:scale-105 active:scale-95"
                     data-testid={`${testId}-remove`}
                   >
                     <X className="w-4 h-4" />
@@ -184,7 +184,7 @@ const ImageBannerUpdate: React.FC<ImageBannerUpdateProps> = ({
                 <button
                   type="button"
                   onClick={handleRemove}
-                  className="flex absolute top-3 right-3 gap-2 items-center p-2 text-white bg-red-500 rounded-full shadow-lg transition-all duration-200 hover:bg-red-600 hover:scale-110"
+                  className="flex absolute top-3 right-3 gap-2 items-center p-2 text-neutral-0 bg-error rounded-full shadow-lg transition-all duration-200 hover:bg-error/90 hover:scale-110"
                   data-testid={`${testId}-remove`}
                 >
                   <X className="w-4 h-4" />
@@ -199,11 +199,11 @@ const ImageBannerUpdate: React.FC<ImageBannerUpdateProps> = ({
               "relative border-2 border-dashed rounded-2xl transition-all duration-300",
               aspectRatioClasses[aspectRatio],
               disabled
-                ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
-                : "border-gray-300 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer",
-              isUploading && "border-blue-500 bg-blue-50/50",
-              isDragging && "border-blue-500 bg-blue-100/60 scale-[1.02]",
-              displayError && "border-red-300 bg-red-50/30"
+                ? "border-border-2 bg-input-bg-disabled cursor-not-allowed opacity-60"
+                : "border-input-border hover:border-primary-4 hover:bg-primary-1/30 cursor-pointer",
+              isUploading && "border-primary-5 bg-primary-1/50",
+              isDragging && "border-primary-5 bg-primary-2/60 scale-[1.02]",
+              displayError && "border-error-3 bg-error-1/30"
             )}
             onClick={handleClick}
             onDrop={handleDrop}
@@ -226,8 +226,8 @@ const ImageBannerUpdate: React.FC<ImageBannerUpdateProps> = ({
                 <>
                   <Spinner />
                   <div className="space-y-1">
-                    <p className="text-base font-semibold text-blue-600">Đang tải lên...</p>
-                    <p className="text-xs text-blue-500">Vui lòng đợi trong giây lát</p>
+                    <p className="text-base font-semibold text-primary-6">Đang tải lên...</p>
+                    <p className="text-xs text-primary-5">Vui lòng đợi trong giây lát</p>
                   </div>
                 </>
               ) : (
@@ -237,25 +237,25 @@ const ImageBannerUpdate: React.FC<ImageBannerUpdateProps> = ({
                     className={clsx(
                       "p-4 rounded-2xl shadow-lg transition-all duration-300",
                       isDragging
-                        ? "bg-gradient-to-br from-blue-600 to-blue-700 scale-110"
-                        : "bg-gradient-to-br from-blue-500 to-blue-600 hover:scale-105"
+                        ? "bg-gradient-to-br from-primary-6 to-primary-7 scale-110"
+                        : "bg-gradient-to-br from-primary-5 to-primary-6 hover:scale-105"
                     )}
                   >
-                    <ImageUp className="w-8 h-8 text-white" strokeWidth={2} />
+                    <ImageUp className="w-8 h-8 text-neutral-0" strokeWidth={2} />
                   </div>
 
                   {/* Text content */}
                   <div className="space-y-2">
                     <div>
-                      <p className="text-base font-semibold text-gray-800">
+                      <p className="text-base font-semibold text-neutral-8">
                         {isDragging ? "Thả file vào đây" : "Nhấp để tải lên hoặc kéo thả"}
                       </p>
-                      <p className="mt-1.5 text-sm text-gray-600">
+                      <p className="mt-1.5 text-sm text-neutral-6">
                         PNG, JPG, GIF tối đa {maxSizeInMB}MB
                       </p>
                     </div>
                     {aspectRatio === "banner" && (
-                      <p className="text-xs text-gray-500 italic">
+                      <p className="text-xs text-neutral-5 italic">
                         Khuyến nghị: 2100 x 900px hoặc tỷ lệ 21:9
                       </p>
                     )}
@@ -269,9 +269,9 @@ const ImageBannerUpdate: React.FC<ImageBannerUpdateProps> = ({
 
       {/* Error Message */}
       {displayError && (
-        <div className="flex gap-2.5 items-start p-3.5 bg-red-50 rounded-xl border border-red-200 animate-in slide-in-from-top-2 duration-300">
+        <div className="flex gap-2.5 items-start p-3.5 bg-error-1 rounded-xl border border-error-2 animate-in slide-in-from-top-2 duration-300">
           <svg
-            className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+            className="w-5 h-5 text-error mt-0.5 flex-shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -281,7 +281,7 @@ const ImageBannerUpdate: React.FC<ImageBannerUpdateProps> = ({
               clipRule="evenodd"
             />
           </svg>
-          <p className="text-sm font-medium text-red-700 leading-relaxed">{displayError}</p>
+          <p className="text-sm font-medium text-error-7 leading-relaxed">{displayError}</p>
         </div>
       )}
     </div>

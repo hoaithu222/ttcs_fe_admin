@@ -12,7 +12,7 @@ interface MessageItemProps {
   currentUserId?: string;
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({ message, isOwn, currentUserId }) => {
+const MessageItem: React.FC<MessageItemProps> = ({ message, isOwn }) => {
   const messageDate = new Date(message.createdAt);
   const isToday = messageDate.toDateString() === new Date().toDateString();
   const timeStr = format(messageDate, isToday ? "HH:mm" : "dd/MM/yyyy HH:mm", {
@@ -52,41 +52,81 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isOwn, currentUserId
           </span>
         )}
 
-        <div
-          className={clsx(
-            "rounded-2xl px-4 py-2.5 shadow-sm transition-all duration-200",
-            isOwn
-              ? "bg-gradient-to-br from-primary-6 to-primary-7 text-white rounded-br-md"
-              : "bg-gradient-to-br from-background-2 to-background-1 text-neutral-10 rounded-bl-md border border-neutral-3"
-          )}
-        >
-          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.message}</p>
+        {/* Check if message has text content */}
+        {(() => {
+          const hasText = message.message && typeof message.message === 'string' && message.message.trim();
+          const hasAttachments = message.attachments && message.attachments.length > 0;
+          const onlyImages = hasAttachments && !hasText;
 
-          {message.attachments && message.attachments.length > 0 && (
-            <div className="mt-2 space-y-2">
-              {message.attachments.map((attachment, idx) => (
-                <div key={idx} className="rounded-lg overflow-hidden">
-                  {attachment.type?.startsWith("image/") ? (
-                    <Image
-                      src={attachment.url}
-                      alt={attachment.name || "Attachment"}
-                      className="max-w-full h-auto rounded-lg"
-                    />
-                  ) : (
-                    <a
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-2 bg-neutral-2 rounded hover:bg-neutral-3 transition-colors"
-                    >
-                      <span className="text-sm">{attachment.name || "File"}</span>
-                    </a>
-                  )}
+          // If only images, render without background bubble
+          if (onlyImages && message.attachments) {
+            return (
+              <div className="space-y-2">
+                {message.attachments.map((attachment, idx) => (
+                  <div key={idx} className="rounded-lg overflow-hidden">
+                    {attachment.type?.startsWith("image/") ? (
+                      <Image
+                        src={attachment.url}
+                        alt={attachment.name || "Attachment"}
+                        className="max-w-full h-auto rounded-lg"
+                      />
+                    ) : (
+                      <a
+                        href={attachment.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2 bg-neutral-2 rounded hover:bg-neutral-3 transition-colors"
+                      >
+                        <span className="text-sm">{attachment.name || "File"}</span>
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          }
+
+          // If has text or both text and attachments, render with background bubble
+          return (
+            <div
+              className={clsx(
+                "rounded-2xl px-4 py-2.5 shadow-sm transition-all duration-200",
+                isOwn
+                  ? "bg-gradient-to-br from-primary-6 to-primary-7 text-white rounded-br-md"
+                  : "bg-gradient-to-br from-background-2 to-background-1 text-neutral-10 rounded-bl-md border border-neutral-3"
+              )}
+            >
+              {hasText && (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.message}</p>
+              )}
+
+              {hasAttachments && message.attachments && (
+                <div className={clsx("space-y-2", hasText ? "mt-2" : "")}>
+                  {message.attachments.map((attachment, idx) => (
+                    <div key={idx} className="rounded-lg overflow-hidden">
+                      {attachment.type?.startsWith("image/") ? (
+                        <Image
+                          src={attachment.url}
+                          alt={attachment.name || "Attachment"}
+                          className="max-w-full h-auto rounded-lg"
+                        />
+                      ) : (
+                        <a
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 p-2 bg-neutral-2 rounded hover:bg-neutral-3 transition-colors"
+                        >
+                          <span className="text-sm">{attachment.name || "File"}</span>
+                        </a>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
 
         <div className={clsx("flex items-center gap-1.5 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity", isOwn ? "flex-row-reverse" : "")}>
           <span className="text-xs text-neutral-5">{timeStr}</span>

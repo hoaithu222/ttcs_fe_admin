@@ -86,3 +86,13 @@ export const selectTotalUnreadCount = createSelector(
     conversations.reduce((sum: number, c: any) => sum + (c.unreadCount || 0), 0)
 );
 
+export const selectTypingUsers = (conversationId: string) =>
+  createSelector([selectChatState], (chatState) => {
+    return chatState?.typing?.[conversationId] || [];
+  });
+
+export const selectOnlineUsers = (conversationId: string) =>
+  createSelector([selectChatState], (chatState) => {
+    return chatState?.onlineUsers?.[conversationId] || [];
+  });
+
