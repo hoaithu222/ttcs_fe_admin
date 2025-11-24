@@ -5,7 +5,6 @@ const App = () => {
   // const dispatch = useDispatch();
 
   // check authentication  lấy thông tin người dùng
-
   return <RouterProvider router={router} />;
 };
 

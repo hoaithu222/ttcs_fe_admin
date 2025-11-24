@@ -114,7 +114,7 @@ const Header = () => {
         <div className="flex items-center space-x-4">
           <div
             className="flex overflow-hidden items-center space-x-2 w-12 h-12 rounded-lg cursor-pointer lg:w-14 lg:h-14"
-            onClick={() => navigation(NAVIGATION_CONFIG.home.path)}
+            onClick={() => navigation(NAVIGATION_CONFIG.homeConfiguration.path)}
           >
             <Image name="logo" alt="logo" />
           </div>

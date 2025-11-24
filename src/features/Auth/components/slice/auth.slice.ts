@@ -60,16 +60,19 @@ export const { slice, reducer } = createResettableSlice({
     logoutUser: (state) => {
       state.isAuthenticated = false;
       state.user = null;
+      state.isLoadingLogin = false; // Reset loading state khi logout
       state.logout.logoutStatus = ReduxStateType.LOADING;
     },
     logoutSuccess: (state) => {
       state.isAuthenticated = false;
       state.user = null;
+      state.isLoadingLogin = false; // Reset loading state khi logout thành công
       state.logout.logoutStatus = ReduxStateType.SUCCESS;
     },
     logoutFailed: (state) => {
       state.isAuthenticated = false;
       state.user = null;
+      state.isLoadingLogin = false; // Reset loading state khi logout thất bại
       state.logout.logoutStatus = ReduxStateType.ERROR;
     },
     refreshTokenSuccess: (state, action) => {

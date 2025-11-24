@@ -17,11 +17,16 @@ const ChatPage = lazy(() => import("@/features/Chat/pages/ChatPage"));
 const HomeConfigurationPage = lazy(() => import("@/features/Home/pages/HomeConfigurationPage"));
 const defaultOptions = {
   requireAuth: false,
+  requireAdmin: false,
   hideInMenu: false,
 };
 const defaultAuthOptions = {
   ...defaultOptions,
   requireAuth: true,
+};
+const defaultAdminOptions = {
+  ...defaultAuthOptions,
+  requireAdmin: true,
 };
 
 export const ROUTE = {
@@ -29,7 +34,7 @@ export const ROUTE = {
     path: NAVIGATION_CONFIG.homeConfiguration.path,
     element: <HomeConfigurationPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   login: {
     path: NAVIGATION_CONFIG.login.path,
@@ -41,67 +46,67 @@ export const ROUTE = {
     path: NAVIGATION_CONFIG.dashboard.path,
     element: <DashboardPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   users: {
     path: NAVIGATION_CONFIG.users.path,
     element: <UsersPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   products: {
     path: NAVIGATION_CONFIG.products.path,
     element: <ProductsPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   categories: {
     path: NAVIGATION_CONFIG.categories.path,
     element: <CategoriesPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   subCategories: {
     path: NAVIGATION_CONFIG.subCategories.path,
     element: <SubCategoriesPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   attributes: {
     path: NAVIGATION_CONFIG.attributes.path,
     element: <AttributesPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   shops: {
     path: NAVIGATION_CONFIG.shops.path,
     element: <ShopPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   analytics: {
     path: NAVIGATION_CONFIG.analytics.path,
     element: <AnalyticsPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   settings: {
     path: NAVIGATION_CONFIG.settings.path,
     element: <SettingsPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   wallets: {
     path: NAVIGATION_CONFIG.wallets.path,
     element: <WalletPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   chat: {
     path: NAVIGATION_CONFIG.chat.path,
     element: <ChatPage />,
     layout: "main",
-    options: defaultAuthOptions,
+    options: defaultAdminOptions,
   },
   // homeConfiguration: {
   //   path: NAVIGATION_CONFIG.homeConfiguration.path,
@@ -117,6 +122,7 @@ export const ROUTE = {
     layout: React.ReactNode;
     options: {
       requireAuth: boolean;
+      requireAdmin?: boolean;
       hideInMenu: boolean;
     };
   }

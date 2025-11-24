@@ -9,6 +9,7 @@ import LoginLayout from "@/layout/LoginLayout";
 import NotFound from "@/layout/NotFound";
 import ExtensionLayout from "@/layout/ExtensionLayout";
 import NotPermisstion from "@/layout/NotPermisstion";
+import NotAuthorized from "@/layout/NotAuthorized";
 // map layout name thành component layout tương ứng
 const layoutMap = {
   main: MainLayout,
@@ -16,6 +17,7 @@ const layoutMap = {
   notFound: NotFound,
   extension: ExtensionLayout,
   notPermisstion: NotPermisstion,
+  notAuthorized: NotAuthorized,
 };
 
 // gom các router theo layout trở thành nhánh trong router tree
@@ -41,7 +43,10 @@ Object.values(ROUTE).forEach((router) => {
   layoutRoutes[layout].children?.push({
     path: path.replace(/^\//, ""),
     element,
-    loader: authMiddleware({ requireAuth: options.requireAuth }) as unknown as LoaderFunction,
+    loader: authMiddleware({ 
+      requireAuth: options.requireAuth,
+      requireAdmin: options.requireAdmin 
+    }) as unknown as LoaderFunction,
   });
 });
 
@@ -61,7 +66,21 @@ Object.keys(layoutRoutes).forEach((layout) => {
 const routers: RouteObject = {
   path: "/",
   element: <AppShell />,
-  children: Object.values(layoutRoutes),
+  children: [
+    ...Object.values(layoutRoutes),
+    // Thêm route not-authorized (standalone, không cần layout)
+    {
+      path: "not-authorized",
+      element: <NotAuthorized />,
+      loader: authMiddleware({ requireAuth: false, requireAdmin: false }) as unknown as LoaderFunction,
+    },
+    // Thêm route not-found (standalone, không cần layout)
+    {
+      path: "not-found",
+      element: <NotFound />,
+      loader: authMiddleware({ requireAuth: false, requireAdmin: false }) as unknown as LoaderFunction,
+    },
+  ],
 };
 
 export const router = createBrowserRouter([routers]);

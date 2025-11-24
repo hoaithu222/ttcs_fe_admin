@@ -21,15 +21,33 @@ function* loginSaga(action: PayloadAction<LoginRequest>): Generator<any, void, a
     const response = yield call(authApi.login, action.payload);
 
     if (response.success && response.data) {
-      // Lưu token vào localStorage
-      if (response.data.user.accessToken) {
-        localStorage.setItem("accessToken", response.data.user.accessToken);
-      }
-      if (response.data.user.refreshToken) {
-        localStorage.setItem("refreshToken", response.data.user.refreshToken);
+      const user = response.data.user;
+      const userRole = user?.role;
+
+      // Kiểm tra quyền admin - chỉ cho phép admin và moderator đăng nhập
+      const isAdmin = userRole === "admin" || userRole === "moderator";
+
+      if (!isAdmin) {
+        // Không phải admin, không cho đăng nhập
+        yield put(loginFailed());
+        toastUtils.error("Bạn không có quyền truy cập. Chỉ có Admin mới được phép đăng nhập vào hệ thống này.");
+        return;
       }
 
-      yield put(loginSuccess(response.data.user));
+      // Lưu token vào localStorage (chỉ khi là admin)
+      if (user.accessToken) {
+        localStorage.setItem("accessToken", user.accessToken);
+      }
+      if (user.refreshToken) {
+        localStorage.setItem("refreshToken", user.refreshToken);
+      }
+      
+      // Lưu role vào localStorage để middleware có thể lấy ngay
+      if (userRole) {
+        localStorage.setItem("userRole", userRole);
+      }
+
+      yield put(loginSuccess(user));
       toastUtils.success("Đăng nhập thành công!");
     } else {
       yield put(loginFailed());
@@ -54,10 +72,11 @@ function* logoutSaga(): Generator<any, void, any> {
       // Tiếp tục logout ngay cả khi API call thất bại
     }
 
-    // Xóa token khỏi localStorage
+    // Xóa token và role khỏi localStorage
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    console.log("Tokens removed from localStorage");
+    localStorage.removeItem("userRole");
+    console.log("Tokens and role removed from localStorage");
 
     // Xóa Redux persist data
     localStorage.removeItem("persist:root");
@@ -69,9 +88,10 @@ function* logoutSaga(): Generator<any, void, any> {
   } catch (error: any) {
     console.error("Logout saga error:", error);
 
-    // Ngay cả khi có lỗi, vẫn xóa tokens và logout
+    // Ngay cả khi có lỗi, vẫn xóa tokens, role và logout
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userRole");
     localStorage.removeItem("persist:root");
 
     yield put(logoutSuccess());
@@ -93,7 +113,41 @@ function* refreshTokenSaga(): Generator<any, void, any> {
     const response = yield call(authApi.refreshToken, refreshToken);
 
     if (response.success && response.data) {
-      // Cập nhật token mới
+      // Lấy thông tin user từ Redux store để check role
+      // Nếu không có user trong store, cần lấy từ token hoặc API
+      const persistData = localStorage.getItem("persist:root");
+      let userRole: string | null = null;
+
+      if (persistData) {
+        try {
+          const parsedPersist = JSON.parse(persistData);
+          const authData = parsedPersist.auth ? JSON.parse(parsedPersist.auth) : null;
+          const user = authData?.user;
+          if (user && typeof user === 'object') {
+            // Lấy role từ user object
+            if (user.data?.user?.role && typeof user.data.user.role === 'string') {
+              userRole = user.data.user.role;
+            } else if (user.role && typeof user.role === 'string') {
+              userRole = user.role;
+            }
+          }
+        } catch (parseError) {
+          console.warn("Error parsing persist data in refreshTokenSaga:", parseError);
+        }
+      }
+
+      // Kiểm tra quyền admin - chỉ cho phép admin và moderator
+      const isAdmin = userRole === "admin" || userRole === "moderator";
+
+      if (!isAdmin) {
+        // Không phải admin, logout
+        yield put(refreshTokenFailed());
+        yield put(logoutUser());
+        toastUtils.error("Bạn không có quyền truy cập. Chỉ có Admin mới được phép đăng nhập vào hệ thống này.");
+        return;
+      }
+
+      // Cập nhật token mới (chỉ khi là admin)
       if (response.data.accessToken) {
         localStorage.setItem("accessToken", response.data.accessToken);
       }

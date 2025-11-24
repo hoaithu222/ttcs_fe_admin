@@ -4,15 +4,23 @@ import Button from "@/foundation/components/buttons/Button";
 import { User, Lock, Sparkles } from "lucide-react";
 import FloatingInput from "@/foundation/components/input/FloatingInput";
 import { LoginRequest } from "@/core/api/auth/type";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useAuth from "@/features/Auth/hooks/useAuth";
+import { useAppDispatch } from "@/app/store";
+import { setIsLoadingLogin } from "@/features/Auth/components/slice/auth.slice";
 
 const Login = () => {
+  const dispatch = useAppDispatch();
   const { isLoadingLogin, onSubmitLogin } = useAuth();
   const [data, setData] = useState<LoginRequest>({
     email: "",
     password: "",
   });
+
+  // Reset loading state khi component mount để tránh button bị loading
+  useEffect(() => {
+    dispatch(setIsLoadingLogin(false));
+  }, [dispatch]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({ ...data, [e.target.name]: e.target.value });
