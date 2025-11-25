@@ -15,6 +15,7 @@ import { imagesApi } from "@/core/api/images";
 import IconCircleWrapper from "@/foundation/components/icons/IconCircleWrapper";
 import { EditIcon } from "lucide-react";
 import AlertMessage from "@/foundation/components/info/AlertMessage";
+import AiCategoryDescriptionGenerator from "@/foundation/components/ai/AiCategoryDescriptionGenerator";
 
 interface ModalEditCategoryProps {
   open: boolean;
@@ -178,20 +179,33 @@ const ModalEditCategory: React.FC<ModalEditCategoryProps> = ({ open, onOpenChang
               className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
             />
 
-            <TextArea
-              name="description"
-              label="Mô tả"
-              placeholder="Nhập mô tả chi tiết về danh mục này..."
-              value={formData.data.description || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  data: { ...formData.data, description: e.target.value },
-                })
-              }
-              rows={4}
-              className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
-            />
+            <div className="space-y-2">
+              <AiCategoryDescriptionGenerator
+                onGenerate={(description) => {
+                  setFormData({
+                    ...formData,
+                    data: { ...formData.data, description },
+                  });
+                }}
+                categoryName={formData.data.name}
+                language="vi"
+                className="mb-2"
+              />
+              <TextArea
+                name="description"
+                label="Mô tả"
+                placeholder="Nhập mô tả chi tiết về danh mục này hoặc nhấn nút AI để tạo tự động..."
+                value={formData.data.description || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    data: { ...formData.data, description: e.target.value },
+                  })
+                }
+                rows={4}
+                className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
+              />
+            </div>
 
             <ImageIconUpload
               value={imageIcon}

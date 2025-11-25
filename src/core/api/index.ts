@@ -20,3 +20,4 @@ export { attributeTypesApi } from "./attribute-type";
 export { attributeValuesApi } from "./attribute-value";
 export { productAttributesApi } from "./product-attribute";
 export { walletApi } from "./wallet";
+export { aiAssistantApi } from "./ai";

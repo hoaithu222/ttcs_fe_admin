@@ -14,6 +14,7 @@ import { imagesApi } from "@/core/api/images";
 import AlertMessage from "@/foundation/components/info/AlertMessage";
 import { InfoIcon } from "lucide-react";
 import ImageIconUpload from "@/foundation/components/input/upload/ImageIconUpload";
+import AiCategoryDescriptionGenerator from "@/foundation/components/ai/AiCategoryDescriptionGenerator";
 interface ModalAddCategoryProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -157,15 +158,25 @@ const ModalAddCategory: React.FC<ModalAddCategoryProps> = ({ open, onOpenChange 
               className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
             />
 
-            <TextArea
-              name="description"
-              label="Mô tả"
-              placeholder="Nhập mô tả chi tiết về danh mục này..."
-              value={formData.description || ""}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={4}
-              className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
-            />
+            <div className="space-y-2">
+              <AiCategoryDescriptionGenerator
+                onGenerate={(description) => {
+                  setFormData({ ...formData, description });
+                }}
+                categoryName={formData.name}
+                language="vi"
+                className="mb-2"
+              />
+              <TextArea
+                name="description"
+                label="Mô tả"
+                placeholder="Nhập mô tả chi tiết về danh mục này hoặc nhấn nút AI để tạo tự động..."
+                value={formData.description || ""}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={4}
+                className="transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500"
+              />
+            </div>
             {/* Icon image */}
             <ImageIconUpload
               value={imageIcon}

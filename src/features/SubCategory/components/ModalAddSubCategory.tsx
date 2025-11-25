@@ -15,6 +15,7 @@ import { imagesApi } from "@/core/api/images";
 import ImageBannerUpdate from "@/foundation/components/input/upload/ImageBannerUpload";
 import ScrollView from "@/foundation/components/scroll/ScrollView";
 import ImageIconUpload from "@/foundation/components/input/upload/ImageIconUpload";
+import AiCategoryDescriptionGenerator from "@/foundation/components/ai/AiCategoryDescriptionGenerator";
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -151,14 +152,24 @@ const ModalAddSubCategory: React.FC<Props> = ({ open, onOpenChange }) => {
               required
             />
 
-            <TextArea
-              name="description"
-              label="Mô tả"
-              placeholder="Nhập mô tả (không bắt buộc)"
-              rows={4}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
+            <div className="space-y-2">
+              <AiCategoryDescriptionGenerator
+                onGenerate={(description) => {
+                  setFormData({ ...formData, description });
+                }}
+                categoryName={formData.name}
+                language="vi"
+                className="mb-2"
+              />
+              <TextArea
+                name="description"
+                label="Mô tả"
+                placeholder="Nhập mô tả (không bắt buộc) hoặc nhấn nút AI để tạo tự động..."
+                rows={4}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
 
             <Select
               name="parentId"
