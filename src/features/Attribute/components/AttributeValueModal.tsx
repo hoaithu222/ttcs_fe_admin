@@ -11,6 +11,8 @@ import type {
   UpdateAttributeValueRequest,
 } from "@/core/api/attribute-value/type";
 import { slugify } from "@/shared/utils/slugify";
+import ScrollView from "@/foundation/components/scroll/ScrollView";
+import AlertMessage from "@/foundation/components/info/AlertMessage";
 
 interface Props {
   open: boolean;
@@ -67,56 +69,74 @@ const AttributeValueModal: React.FC<Props> = ({
       open={open}
       onOpenChange={onOpenChange}
       title={mode === "create" ? "Thêm giá trị" : "Cập nhật giá trị"}
+      size="xl"
     >
       <Form.Root>
         <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-1 gap-4">
-            <Input
-              name="attrValue-type"
-              label="Loại thuộc tính"
-              value={attributeType?.name || "Chưa chọn"}
-              disabled
-            />
-            <Input
-              name="attrValue-label"
-              label="Tên hiển thị"
-              placeholder="vd: Xanh Midnight"
-              value={form.label || ""}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleChange("label", e.target.value)
-              }
-              required
-            />
-            <Input
-              name="attrValue-value"
-              label="Mã hệ thống (slug)"
-              value={form.value}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                {
-                  setIsValueManual(true);
-                  handleChange("value", slugify(e.target.value, "_"));
-                }
-              }
-              required
-              placeholder="vd: midnight_blue"
-              description="Tên không dấu để mapping với SKU/SKU seed."
-            />
-            <Input
-              name="attrValue-color"
-              label="Mã màu (tuỳ chọn)"
-              placeholder="#000000 hoặc rgba(...)"
-              value={form.colorCode || ""}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleChange("colorCode", e.target.value)
-              }
-            />
-            <Switch
-              name="attrValue-active"
-              label="Hoạt động"
-              checked={!!form.isActive}
-              onChange={(checked) => handleChange("isActive", !!checked)}
-            />
-          </div>
+          <ScrollView className="!h-[520px] max-h-[70vh]" hideScrollbarY={false}>
+            <div className="flex flex-col gap-6 p-0.5">
+              <AlertMessage
+                type="info"
+                title="Thông tin giá trị"
+                message="Tên hiển thị và mã hệ thống sẽ được dùng để đồng bộ với SKU. Vui lòng kiểm tra kỹ trước khi lưu."
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  name="attrValue-type"
+                  label="Loại thuộc tính"
+                  value={attributeType?.name || "Chưa chọn"}
+                  disabled
+                  className="md:col-span-2"
+                />
+                <Input
+                  name="attrValue-label"
+                  label="Tên hiển thị"
+                  placeholder="vd: Xanh Midnight"
+                  value={form.label || ""}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleChange("label", e.target.value)
+                  }
+                  required
+                />
+                <Input
+                  name="attrValue-value"
+                  label="Mã hệ thống (slug)"
+                  value={form.value}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setIsValueManual(true);
+                    handleChange("value", slugify(e.target.value, "_"));
+                  }}
+                  required
+                  placeholder="vd: midnight_blue"
+                  description="Tên không dấu để mapping với SKU/SKU seed."
+                />
+                <Input
+                  name="attrValue-color"
+                  label="Mã màu (tuỳ chọn)"
+                  placeholder="#000000 hoặc rgba(...)"
+                  value={form.colorCode || ""}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleChange("colorCode", e.target.value)
+                  }
+                />
+                <div className="flex items-center justify-between rounded-lg border border-divider-1 px-4 py-3 md:col-span-2">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-neutral-9">Trạng thái hiển thị</span>
+                    <span className="text-xs text-neutral-6">
+                      Tắt nếu giá trị này không còn áp dụng cho sản phẩm.
+                    </span>
+                  </div>
+                  <Switch
+                    name="attrValue-active"
+                    label="Hoạt động"
+                    labelPosition="left"
+                    checked={!!form.isActive}
+                    onChange={(checked) => handleChange("isActive", !!checked)}
+                  />
+                </div>
+              </div>
+            </div>
+          </ScrollView>
           <div className="flex justify-end gap-3 pt-4 border-t border-divider-1">
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Hủy

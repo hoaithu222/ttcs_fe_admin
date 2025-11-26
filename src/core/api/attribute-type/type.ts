@@ -5,6 +5,8 @@ export interface AttributeType {
   code: string;
   description?: string;
   categoryId?: string | { _id: string; name: string };
+  categoryIds?: string[];
+  categories?: Array<{ _id: string; name: string }>;
   isActive: boolean;
   is_multiple: boolean;
   inputType?: "text" | "number" | "select" | "multiselect" | "boolean" | "date" | "color";
@@ -29,6 +31,7 @@ export interface CreateAttributeTypeRequest {
   code?: string;
   description?: string;
   categoryId?: string;
+  categoryIds?: string[];
   isActive?: boolean;
   is_multiple?: boolean;
   inputType?: AttributeType["inputType"];

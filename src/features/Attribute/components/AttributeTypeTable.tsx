@@ -6,6 +6,8 @@ import Chip from "@/foundation/components/info/Chip";
 import Tooltip from "@/foundation/components/tooltip/Tooltip";
 import { EditIcon, TrashIcon, MousePointerClick } from "lucide-react";
 import type { AttributeType } from "@/core/api/attribute-type/type";
+import { useAppDispatch, useAppSelector } from "@/app/store";
+import { fetchCategoriesStart } from "@/features/Category/slice/category.slice";
 
 interface Props {
   data: AttributeType[];
@@ -34,6 +36,24 @@ const AttributeTypeTable: React.FC<Props> = ({
   totalItems,
   itemsPerPage = 10,
 }) => {
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector((state) => state.category.categories);
+
+  React.useEffect(() => {
+    if (!categories || categories.length === 0) {
+      dispatch(fetchCategoriesStart({ page: 1, limit: 500 }));
+    }
+  }, [categories?.length, dispatch]);
+
+  const categoryNameMap = React.useMemo(
+    () =>
+      (categories || []).reduce<Record<string, string>>((acc, cat) => {
+        if (cat?._id) acc[cat._id] = cat.name;
+        return acc;
+      }, {}),
+    [categories]
+  );
+
   const columns: ColumnWithSummary<AttributeType>[] = [
     {
       id: "name",
@@ -65,15 +85,49 @@ const AttributeTypeTable: React.FC<Props> = ({
       size: 140,
     },
     {
-      id: "categoryId",
+      id: "categories",
       header: "Danh mục",
-      accessorKey: "categoryId",
+      accessorKey: "categoryIds",
       cell: (info) => {
-        const category = info.row.original.categoryId;
-        const name = typeof category === "object" && category ? category.name : "-";
-        return <span className="text-neutral-8">{name}</span>;
+        const original = info.row.original;
+        const categoryArray =
+          (Array.isArray((original as any).categoryIds) && (original as any).categoryIds.length
+            ? (original as any).categoryIds
+            : (Array.isArray((original as any).categories) && (original as any).categories.length
+              ? (original as any).categories
+              : [original.categoryId].filter(Boolean))) || [];
+        const names =
+          categoryArray.length > 0
+            ? categoryArray
+                .map((cat: any) => {
+                  if (!cat) return undefined;
+                  if (typeof cat === "string") {
+                    return categoryNameMap[cat] || cat;
+                  }
+                  if (typeof cat === "object") {
+                    return cat.name || categoryNameMap[cat._id] || cat._id;
+                  }
+                  return undefined;
+                })
+                .filter((name): name is string => Boolean(name))
+            : [];
+        if (names.length === 0) {
+          return <span className="text-neutral-8">-</span>;
+        }
+        return (
+          <div className="flex flex-wrap gap-1 max-w-[220px]">
+            {names.map((name: string, idx: number) => (
+              <span
+                key={`${name}-${idx}`}
+                className="px-2 py-0.5 rounded-full bg-neutral-2 text-xs text-neutral-8"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+        );
       },
-      size: 180,
+      size: 220,
     },
     {
       id: "description",

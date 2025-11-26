@@ -21,6 +21,7 @@ export function useAttributeForms() {
     name: "",
     code: "",
     categoryId: "",
+    categoryIds: [],
     description: "",
     isActive: true,
     is_multiple: false,
