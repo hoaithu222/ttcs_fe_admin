@@ -9,12 +9,13 @@ import {
   selectOnlineUsers,
 } from "@/app/store/slices/chat/chat.selector";
 import { selectUser } from "@/features/Auth/components/slice/auth.selector";
-import { 
-  getMessagesStart, 
-  markAsReadStart, 
+import {
+  getMessagesStart,
+  markAsReadStart,
   setCurrentConversation,
   setTyping,
   addOnlineUser,
+  removeOnlineUser,
 } from "@/app/store/slices/chat/chat.slice";
 import { socketClients, SOCKET_EVENTS } from "@/core/socket";
 import ScrollView from "@/foundation/components/scroll/ScrollView";
@@ -43,85 +44,130 @@ const ChatWindow: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<any>(null);
+  const typingUsersRef = useRef<string[]>([]);
 
   useEffect(() => {
-    if (currentConversation) {
-      dispatch(
-        getMessagesStart({
-          conversationId: currentConversation._id,
-          query: { page: 1, limit: 50 },
-        })
-      );
+    typingUsersRef.current = typingUsers;
+  }, [typingUsers]);
 
-      // Join conversation room to receive real-time messages
-      const channel = (currentConversation.channel as "admin" | "shop" | "ai") || "admin";
-      let socketClient;
-      
-      switch (channel) {
-        case "admin":
-          socketClient = socketClients.adminChat;
-          break;
-        case "shop":
-          socketClient = socketClients.shopChat;
-          break;
-        case "ai":
-          socketClient = socketClients.aiChat;
-          break;
-        default:
-          socketClient = socketClients.adminChat;
-      }
+  useEffect(() => {
+    if (!currentConversation) {
+      return;
+    }
 
-      if (socketClient) {
-        const socket = socketClient.connect();
-        socketRef.current = socket;
-        if (socket && socket.connected) {
-          socket.emit(SOCKET_EVENTS.CHAT_CONVERSATION_JOIN, {
-            conversationId: currentConversation._id,
-          });
-          
-          // Listen for typing events
-          socket.on(SOCKET_EVENTS.CHAT_TYPING, (payload: any) => {
-            if (payload?.conversationId === currentConversation._id && payload?.userId !== currentUserId) {
-              dispatch(setTyping({
+    const conversationId = currentConversation._id;
+    dispatch(
+      getMessagesStart({
+        conversationId,
+        query: { page: 1, limit: 50 },
+      })
+    );
+
+    // Join conversation room to receive real-time messages
+    const channel =
+      (currentConversation.channel as "admin" | "shop" | "ai") || "admin";
+    let socketClient;
+
+    switch (channel) {
+      case "admin":
+        socketClient = socketClients.adminChat;
+        break;
+      case "shop":
+        socketClient = socketClients.shopChat;
+        break;
+      case "ai":
+        socketClient = socketClients.aiChat;
+        break;
+      default:
+        socketClient = socketClients.adminChat;
+    }
+
+    if (socketClient) {
+      const socket = socketClient.connect();
+      socketRef.current = socket;
+      if (socket && socket.connected) {
+        socket.emit(SOCKET_EVENTS.CHAT_CONVERSATION_JOIN, {
+          conversationId,
+        });
+
+        // Listen for typing events
+        socket.on(SOCKET_EVENTS.CHAT_TYPING, (payload: any) => {
+          if (
+            payload?.conversationId === conversationId &&
+            payload?.userId !== currentUserId
+          ) {
+            dispatch(
+              setTyping({
                 conversationId: payload.conversationId,
                 userId: payload.userId,
                 isTyping: payload.isTyping !== false,
-              }));
-              
-              // Auto clear typing after 3 seconds
-              if (payload.isTyping !== false) {
-                setTimeout(() => {
-                  dispatch(setTyping({
+              })
+            );
+
+            // Auto clear typing after 3 seconds
+            if (payload.isTyping !== false) {
+              setTimeout(() => {
+                dispatch(
+                  setTyping({
                     conversationId: payload.conversationId,
                     userId: payload.userId,
                     isTyping: false,
-                  }));
-                }, 3000);
-              }
+                  })
+                );
+              }, 3000);
             }
-          });
-          
-          // Track online users (when user joins conversation, they're online)
-          const otherParticipant = currentConversation.participants.find(
-            (p: { userId: string }) => p.userId !== currentUserId
-          );
-          if (otherParticipant) {
-            dispatch(addOnlineUser({
-              conversationId: currentConversation._id,
-              userId: otherParticipant.userId,
-            }));
           }
+        });
+
+        // Track online users (when user joins conversation, they're online)
+        const otherParticipant = currentConversation.participants.find(
+          (p: { userId: string }) => p.userId !== currentUserId
+        );
+        if (otherParticipant) {
+          dispatch(
+            addOnlineUser({
+              conversationId,
+              userId: otherParticipant.userId,
+            })
+          );
         }
       }
-      
-      return () => {
-        // Cleanup: remove typing and online status when leaving conversation
-        if (socketRef.current) {
-          socketRef.current.off(SOCKET_EVENTS.CHAT_TYPING);
-        }
-      };
     }
-  }, [currentConversation?._id, currentUserId, dispatch]);
+
+    return () => {
+      // Leave socket room and cleanup transient state
+      if (socketRef.current) {
+        socketRef.current.emit(SOCKET_EVENTS.CHAT_CONVERSATION_LEAVE, {
+          conversationId,
+        });
+        socketRef.current.off(SOCKET_EVENTS.CHAT_TYPING);
+      }
+
+      typingUsersRef.current.forEach((userId) => {
+        dispatch(
+          setTyping({
+            conversationId,
+            userId,
+            isTyping: false,
+          })
+        );
+      });
+
+      currentConversation.participants.forEach((participant: { userId: string }) => {
+        dispatch(
+          removeOnlineUser({
+            conversationId,
+            userId: participant.userId,
+          })
+        );
+      });
+    };
+  }, [
+    currentConversation?._id,
+    currentConversation?.channel,
+    currentUserId,
+    dispatch,
+  ]);
 
   // Mark as read only when ChatWindow is actually visible and messages are loaded
   useEffect(() => {

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useAppSelector } from "@/app/store";
+import { useAppDispatch, useAppSelector } from "@/app/store";
 import { selectCurrentConversation } from "@/app/store/slices/chat/chat.selector";
+import { setCurrentConversation } from "@/app/store/slices/chat/chat.slice";
 import ConversationsList from "../components/ConversationsList";
 import ChatWindow from "../components/ChatWindow";
 import MessageInput from "../components/MessageInput";
 import { MessageSquare } from "lucide-react";
 
 const ChatPage: React.FC = () => {
+  const dispatch = useAppDispatch();
   const currentConversation = useAppSelector(selectCurrentConversation);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -18,6 +20,13 @@ const ChatPage: React.FC = () => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      // Reset conversation state when leaving chat to avoid stale selections
+      dispatch(setCurrentConversation(null));
+    };
+  }, [dispatch]);
 
   if (isMobile) {
     return (
