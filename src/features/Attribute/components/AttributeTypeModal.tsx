@@ -11,6 +11,7 @@ import type {
   CreateAttributeTypeRequest,
   UpdateAttributeTypeRequest,
 } from "@/core/api/attribute-type/type";
+import { attributeTypesApi } from "@/core/api/attribute-type";
 import { categoriesApi } from "@/core/api/categories";
 import type { Category } from "@/core/api/categories/type";
 import { PlusIcon, TrashIcon } from "lucide-react";
@@ -19,29 +20,38 @@ import useAttributeForms from "../hooks/useAttributeForms";
 import ScrollView from "@/foundation/components/scroll/ScrollView";
 import AlertMessage from "@/foundation/components/info/AlertMessage";
 
+const normalizeId = (value: any): string | undefined => {
+  if (!value) return undefined;
+  if (typeof value === "string") return value;
+  if (typeof value === "object") {
+    if (typeof value._id === "string") return value._id;
+    if (typeof value.id === "string") return value.id;
+    if (typeof value.toString === "function") {
+      const str = value.toString();
+      return typeof str === "string" && str !== "[object Object]" ? str : undefined;
+    }
+  }
+  return undefined;
+};
+
 const getCategoryIdsFromAttribute = (attribute?: AttributeType): string[] => {
   if (!attribute) return [];
 
   const fromField = (attribute as any)?.categoryIds;
   if (Array.isArray(fromField) && fromField.length) {
-    return fromField.filter((id: unknown): id is string => typeof id === "string" && !!id);
+    return fromField
+      .map((item: unknown) => normalizeId(item))
+      .filter((id): id is string => typeof id === "string" && !!id);
   }
 
   const fromCategories = (attribute as any)?.categories;
   if (Array.isArray(fromCategories) && fromCategories.length) {
     return fromCategories
-      .map((cat: any) => {
-        if (!cat) return undefined;
-        if (typeof cat === "string") return cat;
-        return cat._id;
-      })
-      .filter((id: unknown): id is string => typeof id === "string" && !!id);
+      .map((cat: any) => normalizeId(cat) || normalizeId(cat?._id))
+      .filter((id): id is string => typeof id === "string" && !!id);
   }
 
-  const single =
-    typeof attribute.categoryId === "string"
-      ? attribute.categoryId
-      : attribute.categoryId?._id;
+  const single = normalizeId(attribute.categoryId);
   return single ? [single] : [];
 };
 
@@ -56,6 +66,23 @@ interface Props {
   ) => Promise<void> | void;
 }
 
+const buildFormState = (attribute?: AttributeType): CreateAttributeTypeRequest => {
+  const categoryIds = getCategoryIdsFromAttribute(attribute);
+
+  return {
+    name: attribute?.name || "",
+    code: attribute?.code || "",
+    description: attribute?.description || "",
+    helperText: attribute?.helperText || "",
+    inputType: attribute?.inputType || "select",
+    categoryId: categoryIds[0] || "",
+    categoryIds,
+    isActive: attribute?.isActive ?? true,
+    is_multiple: (attribute as any)?.is_multiple ?? false,
+    values: [],
+  };
+};
+
 const AttributeTypeModal: React.FC<Props> = ({
   open,
   mode,
@@ -64,24 +91,11 @@ const AttributeTypeModal: React.FC<Props> = ({
   onSubmit,
 }) => {
   const { inputTypeOptions, slugify } = useAttributeForms();
-  const [form, setForm] = React.useState<CreateAttributeTypeRequest>(() => {
-    const initialCategoryIds = getCategoryIdsFromAttribute(initialData);
-    return {
-      name: initialData?.name || "",
-      code: initialData?.code || "",
-      description: initialData?.description || "",
-      helperText: initialData?.helperText || "",
-      inputType: initialData?.inputType || "select",
-      categoryId: initialCategoryIds[0] || "",
-      categoryIds: initialCategoryIds,
-      isActive: initialData?.isActive ?? true,
-      is_multiple: (initialData as any)?.is_multiple ?? false,
-      values: [],
-    };
-  });
+  const [form, setForm] = React.useState<CreateAttributeTypeRequest>(() => buildFormState(initialData));
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [newValue, setNewValue] = React.useState("");
   const [isCodeManual, setIsCodeManual] = React.useState(false);
+  const [isDetailLoading, setIsDetailLoading] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -92,22 +106,44 @@ const AttributeTypeModal: React.FC<Props> = ({
   }, [open]);
 
   React.useEffect(() => {
-    const nextCategoryIds = getCategoryIdsFromAttribute(initialData);
-    setForm({
-      name: initialData?.name || "",
-      code: initialData?.code || "",
-      description: initialData?.description || "",
-      helperText: initialData?.helperText || "",
-      inputType: initialData?.inputType || "select",
-      categoryId: nextCategoryIds[0] || "",
-      categoryIds: nextCategoryIds,
-      isActive: initialData?.isActive ?? true,
-      is_multiple: (initialData as any)?.is_multiple ?? false,
-      values: [],
-    });
-    setNewValue("");
-    setIsCodeManual(false);
-  }, [initialData, open]);
+    let isMounted = true;
+    const resetForm = (data?: AttributeType) => {
+      setForm(buildFormState(data));
+      setNewValue("");
+      setIsCodeManual(false);
+    };
+
+    if (!open) {
+      resetForm(initialData);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    if (mode === "update" && initialData?._id) {
+      setIsDetailLoading(true);
+      attributeTypesApi
+        .getAttributeType(initialData._id)
+        .then((res) => {
+          if (!isMounted) return;
+          resetForm(res.data || initialData);
+        })
+        .catch(() => {
+          if (!isMounted) return;
+          resetForm(initialData);
+        })
+        .finally(() => {
+          if (!isMounted) return;
+          setIsDetailLoading(false);
+        });
+    } else {
+      resetForm(initialData);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialData, mode, open]);
 
   React.useEffect(() => {
     if (!isCodeManual && form.name && !form.code) {
@@ -190,6 +226,7 @@ const AttributeTypeModal: React.FC<Props> = ({
                     onChange={handleCategoryIdsChange}
                     options={categories.map((cat) => ({ label: cat.name, value: cat._id }))}
                     placeholder="Chọn một hoặc nhiều danh mục"
+                    disabled={isDetailLoading}
                     searchable
                     clearable
                     description="Thuộc tính này sẽ xuất hiện trong tất cả danh mục đã chọn."
@@ -310,6 +347,7 @@ const AttributeTypeModal: React.FC<Props> = ({
             </Button>
             <Button
               variant="primary"
+              disabled={isDetailLoading}
               onClick={async () => {
                 if (mode === "update" && initialData?._id) {
                   const payload: UpdateAttributeTypeRequest = { _id: initialData._id, ...form };

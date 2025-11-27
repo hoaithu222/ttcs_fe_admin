@@ -51,7 +51,7 @@ const AttributeValueTable: React.FC<Props> = ({
           </div>
         </div>
       ),
-      size: 240,
+      size: 300,
       meta: { sticky: "left", className: "z-[1]" },
     },
     {

@@ -70,8 +70,8 @@ const AttributeTypeTable: React.FC<Props> = ({
           {/* no extra badge for now */}
         </div>
       ),
-      size: 220,
-      meta: { sticky: "left", className: "z-[1]" },
+      size: 300,
+      meta: {  className: "z-[1]" },
     },
     {
       id: "code",
@@ -82,7 +82,7 @@ const AttributeTypeTable: React.FC<Props> = ({
           {info.getValue() as string}
         </span>
       ),
-      size: 140,
+      size: 180,
     },
     {
       id: "categories",
@@ -109,7 +109,7 @@ const AttributeTypeTable: React.FC<Props> = ({
                   }
                   return undefined;
                 })
-                .filter((name): name is string => Boolean(name))
+                .filter((name: any): name is string => Boolean(name))
             : [];
         if (names.length === 0) {
           return <span className="text-neutral-8">-</span>;
@@ -135,13 +135,13 @@ const AttributeTypeTable: React.FC<Props> = ({
       accessorKey: "description",
       cell: (info) => (
         <span
-          className="text-neutral-8 truncate max-w-[260px]"
+          className="text-neutral-8 truncate max-w-[300px]"
           title={(info.getValue() as string) || "-"}
         >
           {(info.getValue() as string) || "-"}
         </span>
       ),
-      size: 260,
+      size: 560,
     },
     {
       id: "inputType",
