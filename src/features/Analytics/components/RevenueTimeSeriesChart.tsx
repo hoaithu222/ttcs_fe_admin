@@ -1,8 +1,25 @@
 import React from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { TimeSeriesData } from "@/core/api/analytics/type";
 import { Card } from "@/foundation/components/info/Card";
 import { TrendingUp } from "lucide-react";
+import {
+  axisLabelStyle,
+  axisTickStyle,
+  chartTheme,
+  formatLargeNumber,
+  legendWrapperStyle,
+  tooltipStyle,
+} from "./chartTheme";
 
 interface RevenueTimeSeriesChartProps {
   data: TimeSeriesData[];
@@ -10,29 +27,21 @@ interface RevenueTimeSeriesChartProps {
 }
 
 const RevenueTimeSeriesChart: React.FC<RevenueTimeSeriesChartProps> = ({ data, isLoading }) => {
-  if (isLoading) {
+  if (isLoading || !data || data.length === 0) {
+    const message = isLoading ? "Đang tải dữ liệu..." : "Chưa có dữ liệu";
     return (
-      <Card className="p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-primary-6" />
-          <h2 className="text-xl font-bold text-neutral-10">Xu hướng doanh thu theo thời gian</h2>
+      <Card className={chartTheme.card} style={chartTheme.cardStyle}>
+        <div className="flex items-center gap-2">
+          <div className="rounded-2xl bg-emerald-500/15 p-3 text-emerald-300">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+          <div>
+            <p className={`text-xs ${chartTheme.copy.eyebrow}`}>TREND</p>
+            <h2 className={`text-xl ${chartTheme.copy.heading}`}>Xu hướng doanh thu theo thời gian</h2>
+          </div>
         </div>
-        <div className="h-80 flex items-center justify-center">
-          <p className="text-neutral-6">Đang tải dữ liệu...</p>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-primary-6" />
-          <h2 className="text-xl font-bold text-neutral-10">Xu hướng doanh thu theo thời gian</h2>
-        </div>
-        <div className="h-80 flex items-center justify-center">
-          <p className="text-neutral-6">Chưa có dữ liệu</p>
+        <div className={`flex h-80 items-center justify-center text-sm ${chartTheme.copy.muted}`}>
+          {message}
         </div>
       </Card>
     );
@@ -47,35 +56,52 @@ const RevenueTimeSeriesChart: React.FC<RevenueTimeSeriesChartProps> = ({ data, i
   }));
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center space-x-2 mb-4">
-        <TrendingUp className="w-5 h-5 text-primary-6" />
-        <h2 className="text-xl font-bold text-neutral-10">Xu hướng doanh thu theo thời gian</h2>
+    <Card className={chartTheme.card} style={chartTheme.cardStyle}>
+      <div className="flex items-center gap-3 pb-4">
+        <div className="rounded-2xl bg-emerald-500/15 p-3 text-emerald-300">
+          <TrendingUp className="h-5 w-5" />
+        </div>
+        <div>
+          <p className={`text-xs ${chartTheme.copy.eyebrow}`}>REVENUE</p>
+          <h2 className={`text-xl ${chartTheme.copy.heading}`}>Xu hướng doanh thu theo thời gian</h2>
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+          <defs>
+            <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#34d399" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
+            </linearGradient>
+            <linearGradient id="orderGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity={0.05} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid
+            strokeDasharray="4 8"
+            stroke={chartTheme.gridStroke}
+            vertical={false}
+          />
           <XAxis
             dataKey="date"
-            stroke="#6b7280"
-            style={{ fontSize: "12px" }}
-            tick={{ fill: "#6b7280" }}
+            tick={axisTickStyle}
+            tickLine={false}
+            axisLine={{ stroke: chartTheme.gridStroke }}
           />
           <YAxis
-            stroke="#6b7280"
-            style={{ fontSize: "12px" }}
-            tick={{ fill: "#6b7280" }}
-            tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+            tick={axisTickStyle}
+            axisLine={{ stroke: chartTheme.gridStroke }}
+            tickLine={false}
+            tickFormatter={(value) => formatLargeNumber(value)}
+            label={{ ...axisLabelStyle, value: "Giá trị (đ)", angle: -90, position: "insideLeft" }}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-            }}
+            contentStyle={tooltipStyle}
+            labelStyle={{ color: "#e2e8f0", fontWeight: 600 }}
             formatter={(value: number, name: string) => {
               if (name === "revenue") {
-                return [`${value.toLocaleString("vi-VN")} đ`, "Doanh thu"];
+                return [`${value.toLocaleString("vi-VN")} đ`, "Hiện tại"];
               }
               if (name === "orders") {
                 return [value, "Đơn hàng"];
@@ -87,8 +113,8 @@ const RevenueTimeSeriesChart: React.FC<RevenueTimeSeriesChartProps> = ({ data, i
             }}
           />
           <Legend
-            wrapperStyle={{ paddingTop: "20px" }}
-            iconType="line"
+            wrapperStyle={legendWrapperStyle}
+            iconType="circle"
             formatter={(value) => {
               if (value === "revenue") return "Doanh thu";
               if (value === "orders") return "Đơn hàng";
@@ -99,28 +125,29 @@ const RevenueTimeSeriesChart: React.FC<RevenueTimeSeriesChartProps> = ({ data, i
           <Line
             type="monotone"
             dataKey="revenue"
-            stroke="#10b981"
+            stroke="#34d399"
             strokeWidth={3}
-            dot={{ fill: "#10b981", r: 4 }}
-            activeDot={{ r: 6 }}
+            dot={false}
+            activeDot={{ r: 5, strokeWidth: 0 }}
             name="revenue"
+            fill="url(#revenueGradient)"
           />
           <Line
             type="monotone"
             dataKey="orders"
-            stroke="#3b82f6"
+            stroke="#60a5fa"
             strokeWidth={2}
-            dot={{ fill: "#3b82f6", r: 3 }}
-            activeDot={{ r: 5 }}
+            dot={false}
+            activeDot={{ r: 5, strokeWidth: 0 }}
             name="orders"
           />
           <Line
             type="monotone"
             dataKey="customers"
-            stroke="#f59e0b"
+            stroke="#fbbf24"
             strokeWidth={2}
-            dot={{ fill: "#f59e0b", r: 3 }}
-            activeDot={{ r: 5 }}
+            dot={false}
+            activeDot={{ r: 5, strokeWidth: 0 }}
             name="customers"
           />
         </LineChart>

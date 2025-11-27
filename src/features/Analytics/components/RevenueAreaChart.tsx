@@ -1,8 +1,25 @@
 import React from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { TimeSeriesData } from "@/core/api/analytics/type";
 import { Card } from "@/foundation/components/info/Card";
 import { TrendingUp } from "lucide-react";
+import {
+  axisLabelStyle,
+  axisTickStyle,
+  chartTheme,
+  formatLargeNumber,
+  legendWrapperStyle,
+  tooltipStyle,
+} from "./chartTheme";
 
 interface RevenueAreaChartProps {
   data: TimeSeriesData[];
@@ -10,29 +27,21 @@ interface RevenueAreaChartProps {
 }
 
 const RevenueAreaChart: React.FC<RevenueAreaChartProps> = ({ data, isLoading }) => {
-  if (isLoading) {
+  if (isLoading || !data || data.length === 0) {
+    const message = isLoading ? "Đang tải dữ liệu..." : "Chưa có dữ liệu";
     return (
-      <Card className="p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-primary-6" />
-          <h2 className="text-xl font-bold text-neutral-10">Biểu đồ vùng doanh thu</h2>
+      <Card className={chartTheme.card} style={chartTheme.cardStyle}>
+        <div className="flex items-center gap-2">
+          <div className="rounded-2xl bg-sky-500/15 p-3 text-sky-300">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+          <div>
+            <p className={`text-xs ${chartTheme.copy.eyebrow}`}>FORECAST</p>
+            <h2 className={`text-xl ${chartTheme.copy.heading}`}>Biểu đồ vùng doanh thu</h2>
+          </div>
         </div>
-        <div className="h-80 flex items-center justify-center">
-          <p className="text-neutral-6">Đang tải dữ liệu...</p>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-primary-6" />
-          <h2 className="text-xl font-bold text-neutral-10">Biểu đồ vùng doanh thu</h2>
-        </div>
-        <div className="h-80 flex items-center justify-center">
-          <p className="text-neutral-6">Chưa có dữ liệu</p>
+        <div className={`flex h-80 items-center justify-center text-sm ${chartTheme.copy.muted}`}>
+          {message}
         </div>
       </Card>
     );
@@ -45,42 +54,49 @@ const RevenueAreaChart: React.FC<RevenueAreaChartProps> = ({ data, isLoading }) 
   }));
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center space-x-2 mb-4">
-        <TrendingUp className="w-5 h-5 text-primary-6" />
-        <h2 className="text-xl font-bold text-neutral-10">Biểu đồ vùng doanh thu</h2>
+    <Card className={chartTheme.card} style={chartTheme.cardStyle}>
+      <div className="flex items-center gap-3 pb-4">
+        <div className="rounded-2xl bg-sky-500/15 p-3 text-sky-300">
+          <TrendingUp className="h-5 w-5" />
+        </div>
+        <div>
+          <p className={`text-xs ${chartTheme.copy.eyebrow}`}>MOMENTUM</p>
+          <h2 className={`text-xl ${chartTheme.copy.heading}`}>Biểu đồ vùng doanh thu</h2>
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
+              <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#22d3ee" stopOpacity={0.05} />
             </linearGradient>
             <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
+              <stop offset="5%" stopColor="#a855f7" stopOpacity={0.7} />
+              <stop offset="95%" stopColor="#a855f7" stopOpacity={0.05} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey="date"
-            stroke="#6b7280"
-            style={{ fontSize: "12px" }}
-            tick={{ fill: "#6b7280" }}
+          <CartesianGrid
+            strokeDasharray="4 8"
+            stroke={chartTheme.gridStroke}
+            vertical={false}
           />
+          <XAxis dataKey="date" tick={axisTickStyle} tickLine={false} axisLine={false} />
           <YAxis
-            stroke="#6b7280"
-            style={{ fontSize: "12px" }}
-            tick={{ fill: "#6b7280" }}
-            tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+            tick={axisTickStyle}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(value) => formatLargeNumber(value)}
+            label={{
+              ...axisLabelStyle,
+              value: "Giá trị (đ)",
+              angle: -90,
+              position: "insideLeft",
+            }}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-            }}
+            contentStyle={tooltipStyle}
+            labelStyle={{ color: "#e2e8f0", fontWeight: 600 }}
             formatter={(value: number, name: string) => {
               if (name === "revenue") {
                 return [`${value.toLocaleString("vi-VN")} đ`, "Doanh thu"];
@@ -91,18 +107,12 @@ const RevenueAreaChart: React.FC<RevenueAreaChartProps> = ({ data, isLoading }) 
               return [value, name];
             }}
           />
-          <Legend
-            wrapperStyle={{ paddingTop: "20px" }}
-            formatter={(value) => {
-              if (value === "revenue") return "Doanh thu";
-              if (value === "orders") return "Đơn hàng";
-              return value;
-            }}
-          />
+          <Legend wrapperStyle={legendWrapperStyle} iconType="circle" />
           <Area
             type="monotone"
             dataKey="revenue"
-            stroke="#10b981"
+            stroke="#22d3ee"
+            strokeWidth={3}
             fillOpacity={1}
             fill="url(#colorRevenue)"
             name="revenue"
@@ -110,7 +120,8 @@ const RevenueAreaChart: React.FC<RevenueAreaChartProps> = ({ data, isLoading }) 
           <Area
             type="monotone"
             dataKey="orders"
-            stroke="#3b82f6"
+            stroke="#a855f7"
+            strokeWidth={3}
             fillOpacity={1}
             fill="url(#colorOrders)"
             name="orders"

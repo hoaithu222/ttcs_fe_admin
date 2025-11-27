@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useAppSelector } from "@/app/store";
 import {
   selectAdminRevenue,
@@ -8,11 +8,21 @@ import {
   selectOrderStatusDistribution,
   selectAverageOrderValue,
   selectAnalyticsLoading,
+  selectAnalyticsError,
 } from "../slice/analytics.selector";
 import { useAnalyticsActions } from "../hooks/useAnalyticsActions";
 import { Card } from "@/foundation/components/info/Card";
 import ScrollView from "@/foundation/components/scroll/ScrollView";
-import { DollarSign, Package, ShoppingBag, Target } from "lucide-react";
+import {
+  Activity,
+  ArrowUpRight,
+  DollarSign,
+  Package,
+  ShoppingBag,
+  Sparkles,
+  Target,
+  Users,
+} from "lucide-react";
 import RevenueTimeSeriesChart from "../components/RevenueTimeSeriesChart";
 import TopProductsChart from "../components/TopProductsChart";
 import TopShopsChart from "../components/TopShopsChart";
@@ -23,6 +33,25 @@ import RadarChartComponent from "../components/RadarChart";
 import ScatterChartComponent from "../components/ScatterChart";
 import FunnelChartComponent from "../components/FunnelChart";
 
+interface SectionHeaderProps {
+  title: string;
+  description?: string;
+}
+
+const SectionHeader: React.FC<SectionHeaderProps> = ({ title, description }) => (
+  <div className="space-y-2">
+    <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary-5/80">
+      Insight
+    </p>
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+      <h2 className="text-2xl font-bold text-neutral-10">{title}</h2>
+      {description && (
+        <p className="text-sm text-neutral-6 lg:max-w-xl lg:text-right">{description}</p>
+      )}
+    </div>
+  </div>
+);
+
 const AnalyticsPage: React.FC = () => {
   const adminRevenue = useAppSelector(selectAdminRevenue);
   const revenueTimeSeries = useAppSelector(selectRevenueTimeSeries);
@@ -31,7 +60,135 @@ const AnalyticsPage: React.FC = () => {
   const orderStatusDistribution = useAppSelector(selectOrderStatusDistribution);
   const averageOrderValue = useAppSelector(selectAverageOrderValue);
   const isLoading = useAppSelector(selectAnalyticsLoading);
+  const error = useAppSelector(selectAnalyticsError);
   const { fetchAnalyticsData } = useAnalyticsActions();
+
+  const hasRevenueTimeSeries = useMemo(
+    () => revenueTimeSeries && revenueTimeSeries.length > 0,
+    [revenueTimeSeries]
+  );
+  const hasTopProducts = useMemo(() => topProducts && topProducts.length > 0, [topProducts]);
+  const hasTopShops = useMemo(() => topShops && topShops.length > 0, [topShops]);
+  const hasOrderStatus = useMemo(
+    () => orderStatusDistribution && orderStatusDistribution.length > 0,
+    [orderStatusDistribution]
+  );
+  const maxProductRevenue = useMemo(() => {
+    if (!hasTopProducts || !topProducts) return 0;
+    return Math.max(...topProducts.map((product) => product.revenue || 0));
+  }, [hasTopProducts, topProducts]);
+  const maxShopRevenue = useMemo(() => {
+    if (!hasTopShops || !topShops) return 0;
+    return Math.max(...topShops.map((shop) => shop.totalRevenue || 0));
+  }, [hasTopShops, topShops]);
+
+  const derivedStats = useMemo(() => {
+    if (!hasRevenueTimeSeries || !revenueTimeSeries) {
+      return { totalOrders: 0, totalCustomers: 0, avgOrdersPerDay: 0 };
+    }
+
+    const totalOrders = revenueTimeSeries.reduce((acc, item) => acc + (item.orders || 0), 0);
+    const totalCustomers = revenueTimeSeries.reduce(
+      (acc, item) => acc + (item.customers || 0),
+      0
+    );
+    const avgOrdersPerDay =
+      totalOrders > 0 && revenueTimeSeries.length > 0
+        ? Math.round(totalOrders / revenueTimeSeries.length)
+        : 0;
+
+    return { totalOrders, totalCustomers, avgOrdersPerDay };
+  }, [hasRevenueTimeSeries, revenueTimeSeries]);
+
+  const formatCurrency = (value?: number | null) => {
+    if (value === undefined || value === null) {
+      return "—";
+    }
+    return `${value.toLocaleString("vi-VN")} đ`;
+  };
+
+  const formatNumber = (value?: number | null) => {
+    if (value === undefined || value === null) {
+      return "—";
+    }
+    return value.toLocaleString("vi-VN");
+  };
+
+  const metricCards = useMemo(() => {
+    const metrics: {
+      id: string;
+      label: string;
+      value: string;
+      delta?: number;
+      subtext?: string;
+      icon: React.ReactNode;
+      accent: string;
+    }[] = [];
+
+    if (adminRevenue) {
+      metrics.push({
+        id: "revenue",
+        label: "Tổng doanh thu",
+        value: formatCurrency(adminRevenue.totalRevenue),
+        delta: adminRevenue.growthRate,
+        subtext: `Chu kỳ: ${adminRevenue.period}`,
+        icon: (
+          <div className="p-3 rounded-2xl bg-emerald-500/15 text-emerald-400">
+            <DollarSign className="w-5 h-5" />
+          </div>
+        ),
+        accent: "from-emerald-500/10 via-emerald-400/5 to-transparent",
+      });
+    }
+
+    if (averageOrderValue) {
+      metrics.push({
+        id: "aov",
+        label: "Giá trị đơn hàng TB",
+        value: formatCurrency(averageOrderValue.aov),
+        delta: averageOrderValue.growthRate,
+        subtext: `So với ${averageOrderValue.period.toLowerCase()}`,
+        icon: (
+          <div className="p-3 rounded-2xl bg-blue-500/15 text-blue-400">
+            <Target className="w-5 h-5" />
+          </div>
+        ),
+        accent: "from-sky-500/10 via-sky-400/5 to-transparent",
+      });
+    }
+
+    if (derivedStats.totalOrders > 0) {
+      metrics.push({
+        id: "orders",
+        label: "Tổng đơn hàng",
+        value: formatNumber(derivedStats.totalOrders),
+        subtext: `~${formatNumber(derivedStats.avgOrdersPerDay)} đơn/ngày`,
+        icon: (
+          <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-400">
+            <Package className="w-5 h-5" />
+          </div>
+        ),
+        accent: "from-amber-500/10 via-amber-400/5 to-transparent",
+      });
+    }
+
+    if (derivedStats.totalCustomers > 0) {
+      metrics.push({
+        id: "customers",
+        label: "Khách hàng phục vụ",
+        value: formatNumber(derivedStats.totalCustomers),
+        subtext: "Theo chu kỳ thống kê",
+        icon: (
+          <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400">
+            <Users className="w-5 h-5" />
+          </div>
+        ),
+        accent: "from-purple-500/10 via-purple-400/5 to-transparent",
+      });
+    }
+
+    return metrics;
+  }, [adminRevenue, averageOrderValue, derivedStats]);
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -46,186 +203,289 @@ const AnalyticsPage: React.FC = () => {
       thumbClassName="bg-neutral-4 hover:bg-neutral-5"
       trackClassName="bg-transparent"
     >
-      <div className="p-6 max-h-[calc(100vh-120px)] bg-background-base">
-        <h2 className="text-3xl font-bold mb-6 text-neutral-10">Phân tích & Báo cáo</h2>
-
-      {/* Revenue Cards */}
-      {adminRevenue && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-neutral-10">Tổng doanh thu</h3>
-                <p className="text-2xl font-bold text-primary-6">
-                  {adminRevenue.totalRevenue.toLocaleString("vi-VN")} đ
+      <div className="min-h-full bg-gradient-to-br from-background-base via-background-elevated to-background-base/90 p-6">
+        <div className="mx-auto max-w-7xl space-y-8">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-primary-8 via-primary-6 to-secondary-6 text-white shadow-2xl">
+            <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_55%)]" />
+            <div className="relative flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between">
+              <div className="space-y-3">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.4em] text-white/70">
+                  <Sparkles className="h-4 w-4" />
+                  Analytics
                 </p>
-                {adminRevenue.growthRate !== undefined && (
-                  <p
-                    className={`text-sm ${
-                      adminRevenue.growthRate >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {adminRevenue.growthRate >= 0 ? "+" : ""}
-                    {adminRevenue.growthRate.toFixed(2)}%
-                  </p>
-                )}
+                <h1 className="text-3xl font-bold lg:text-4xl">Phân tích & báo cáo tổng quan</h1>
+                <p className="text-white/80">
+                  Cập nhật chu kỳ {adminRevenue?.period ?? "mặc định"} • dữ liệu được tổng hợp theo
+                  thời gian thực để bạn hành động nhanh hơn.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => fetchAnalyticsData()}
+                  className="inline-flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+                >
+                  <Activity className="h-4 w-4" />
+                  Làm mới dữ liệu
+                </button>
               </div>
-            </div>
-          </Card>
-
-          {averageOrderValue && (
-            <Card className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-neutral-10">Giá trị đơn hàng TB</h3>
-                  <p className="text-2xl font-bold text-primary-6">
-                    {averageOrderValue.aov.toLocaleString("vi-VN")} đ
+              <div className="grid w-full gap-4 md:grid-cols-2 lg:max-w-md">
+                <Card className="rounded-2xl border-white/30 bg-white/10 p-5 text-white shadow-xl backdrop-blur">
+                  <p className="text-sm text-white/70">Doanh thu hiện tại</p>
+                  <p className="text-3xl font-bold">
+                    {formatCurrency(adminRevenue?.totalRevenue ?? null)}
                   </p>
-                  {averageOrderValue.growthRate !== undefined && (
-                    <p
-                      className={`text-sm ${
-                        averageOrderValue.growthRate >= 0 ? "text-green-600" : "text-red-600"
+                  {typeof adminRevenue?.growthRate === "number" && (
+                    <span
+                      className={`mt-2 inline-flex items-center text-sm font-semibold ${
+                        adminRevenue.growthRate >= 0 ? "text-emerald-300" : "text-rose-200"
                       }`}
                     >
-                      {averageOrderValue.growthRate >= 0 ? "+" : ""}
-                      {averageOrderValue.growthRate.toFixed(2)}%
-                    </p>
+                      <ArrowUpRight
+                        className={`mr-1 h-4 w-4 ${
+                          adminRevenue.growthRate < 0 ? "rotate-180" : ""
+                        }`}
+                      />
+                      {adminRevenue.growthRate >= 0 ? "+" : ""}
+                      {adminRevenue.growthRate.toFixed(2)}%
+                    </span>
                   )}
-                </div>
+                </Card>
+                <Card className="rounded-2xl border-white/30 bg-white/10 p-5 text-white shadow-xl backdrop-blur">
+                  <p className="text-sm text-white/70">Đơn hàng xử lý</p>
+                  <p className="text-3xl font-bold">{formatNumber(derivedStats.totalOrders)}</p>
+                  <p className="mt-2 text-sm text-white/70">
+                    Trung bình {formatNumber(derivedStats.avgOrdersPerDay)} đơn/ngày
+                  </p>
+                </Card>
               </div>
+            </div>
+          </div>
+
+          {error && (
+            <Card className="border border-red-200/40 bg-red-50/70 p-4 text-red-600 dark:border-red-900/40 dark:bg-red-900/25 dark:text-red-200">
+              <p className="text-sm font-medium">Không thể tải dữ liệu: {error}</p>
             </Card>
           )}
-        </div>
-      )}
 
-      {/* Line Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Revenue Time Series Line Chart */}
-        {revenueTimeSeries && revenueTimeSeries.length > 0 && (
-          <RevenueTimeSeriesChart data={revenueTimeSeries} isLoading={isLoading} />
-        )}
-
-        {/* Revenue Area Chart */}
-        {revenueTimeSeries && revenueTimeSeries.length > 0 && (
-          <RevenueAreaChart data={revenueTimeSeries} isLoading={isLoading} />
-        )}
-      </div>
-
-      {/* Bar Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Top Products Chart */}
-        {topProducts.length > 0 && (
-          <TopProductsChart data={topProducts} isLoading={isLoading} />
-        )}
-
-        {/* Top Shops Chart */}
-        {topShops.length > 0 && (
-          <TopShopsChart data={topShops} isLoading={isLoading} />
-        )}
-      </div>
-
-      {/* Composed Chart */}
-      {topProducts.length > 0 && (
-        <div className="mb-6">
-          <ComposedChartComponent data={topProducts} isLoading={isLoading} />
-        </div>
-      )}
-
-      {/* Pie & Funnel Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Order Status Distribution Pie Chart */}
-        {orderStatusDistribution && orderStatusDistribution.length > 0 && (
-          <OrderStatusPieChart data={orderStatusDistribution} isLoading={isLoading} />
-        )}
-
-        {/* Funnel Chart */}
-        {orderStatusDistribution && orderStatusDistribution.length > 0 && (
-          <FunnelChartComponent data={orderStatusDistribution} isLoading={isLoading} />
-        )}
-      </div>
-
-      {/* Advanced Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Radar Chart */}
-        {topShops.length > 0 && (
-          <RadarChartComponent data={topShops} isLoading={isLoading} />
-        )}
-
-        {/* Scatter Chart */}
-        {topProducts.length > 0 && (
-          <ScatterChartComponent data={topProducts} isLoading={isLoading} />
-        )}
-      </div>
-
-      {/* Top Products List */}
-      {topProducts.length > 0 && (
-        <Card className="p-6 mb-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Package className="w-5 h-5 text-primary-6" />
-            <h2 className="text-xl font-bold text-neutral-10">Chi tiết sản phẩm bán chạy</h2>
-          </div>
-          <div className="space-y-2">
-            {topProducts.slice(0, 10).map((product, index) => (
-              <div
-                key={product.productId}
-                className="p-3 bg-neutral-2 rounded-lg flex justify-between items-center"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm font-medium text-neutral-6">#{index + 1}</span>
-                  <div>
-                    <p className="font-medium text-neutral-10">{product.productName}</p>
-                    <p className="text-sm text-neutral-6">
-                      Đã bán: {product.quantitySold} | Doanh thu:{" "}
-                      {product.revenue.toLocaleString("vi-VN")} đ
-                    </p>
-                  </div>
-                </div>
+          {metricCards.length > 0 && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Chỉ số hiệu suất"
+                description="Nắm bắt nhanh những KPI quan trọng của hoạt động kinh doanh."
+              />
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                {metricCards.map((metric) => (
+                  <Card
+                    key={metric.id}
+                    className="relative overflow-hidden border border-white/10 bg-white/80 p-6 shadow-lg backdrop-blur dark:bg-neutral-900/60"
+                  >
+                    <div
+                      className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${metric.accent}`}
+                    />
+                    <div className="relative flex flex-col gap-4">
+                      <div className="flex items-center justify-between">{metric.icon}</div>
+                      <div>
+                        <p className="text-sm font-medium text-neutral-6">{metric.label}</p>
+                        <p className="text-2xl font-bold text-neutral-10">{metric.value}</p>
+                      </div>
+                      {typeof metric.delta === "number" && (
+                        <span
+                          className={`inline-flex items-center text-sm font-semibold ${
+                            metric.delta >= 0 ? "text-emerald-600" : "text-rose-500"
+                          }`}
+                        >
+                          <ArrowUpRight
+                            className={`mr-1 h-4 w-4 ${
+                              metric.delta < 0 ? "rotate-180" : ""
+                            }`}
+                          />
+                          {metric.delta >= 0 ? "+" : ""}
+                          {metric.delta.toFixed(2)}%
+                        </span>
+                      )}
+                      {metric.subtext && (
+                        <p className="text-sm text-neutral-5">{metric.subtext}</p>
+                      )}
+                    </div>
+                  </Card>
+                ))}
               </div>
-            ))}
-          </div>
-        </Card>
-      )}
+            </section>
+          )}
 
-      {/* Top Shops List */}
-      {topShops.length > 0 && (
-        <Card className="p-6 mb-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <ShoppingBag className="w-5 h-5 text-primary-6" />
-            <h2 className="text-xl font-bold text-neutral-10">Chi tiết cửa hàng hàng đầu</h2>
-          </div>
-          <div className="space-y-2">
-            {topShops.slice(0, 10).map((shop, index) => (
-              <div
-                key={shop.shopId}
-                className="p-3 bg-neutral-2 rounded-lg flex justify-between items-center"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm font-medium text-neutral-6">#{index + 1}</span>
-                  <div>
-                    <p className="font-medium text-neutral-10">{shop.shopName}</p>
-                    <p className="text-sm text-neutral-6">
-                      Doanh thu: {shop.totalRevenue.toLocaleString("vi-VN")} đ | Đơn hàng:{" "}
-                      {shop.totalOrders}
-                    </p>
-                  </div>
-                </div>
+          {hasRevenueTimeSeries && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Xu hướng & dự báo"
+                description="Theo dõi doanh thu, đơn hàng và khách hàng theo thời gian."
+              />
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <RevenueTimeSeriesChart data={revenueTimeSeries} isLoading={isLoading} />
+                <RevenueAreaChart data={revenueTimeSeries} isLoading={isLoading} />
               </div>
-            ))}
-          </div>
-        </Card>
-      )}
+            </section>
+          )}
 
-        {isLoading && (
-          <div className="text-center py-8">
-            <p className="text-neutral-6">Đang tải dữ liệu...</p>
-          </div>
-        )}
+          {(hasTopProducts || hasTopShops) && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Hiệu suất sản phẩm & cửa hàng"
+                description="Xếp hạng dựa trên doanh thu, sản lượng và hiệu quả vận hành."
+              />
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                {hasTopProducts && <TopProductsChart data={topProducts} isLoading={isLoading} />}
+                {hasTopShops && <TopShopsChart data={topShops} isLoading={isLoading} />}
+              </div>
+            </section>
+          )}
+
+          {hasOrderStatus && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Kênh xử lý đơn hàng"
+                description="Tỷ trọng trạng thái và tỷ lệ chuyển đổi qua từng bước phễu."
+              />
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <OrderStatusPieChart data={orderStatusDistribution!} isLoading={isLoading} />
+                <FunnelChartComponent data={orderStatusDistribution!} isLoading={isLoading} />
+              </div>
+            </section>
+          )}
+
+          {hasTopProducts && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Phân tích sản phẩm nâng cao"
+                description="Đánh giá độ tương quan giữa doanh thu, sản lượng và mức độ đóng góp."
+              />
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <ComposedChartComponent data={topProducts} isLoading={isLoading} />
+                <ScatterChartComponent data={topProducts} isLoading={isLoading} />
+              </div>
+            </section>
+          )}
+
+          {hasTopShops && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Năng lực cửa hàng"
+                description="So sánh cấu hình doanh thu và đơn hàng của từng cửa hàng."
+              />
+              <RadarChartComponent data={topShops} isLoading={isLoading} />
+            </section>
+          )}
+
+          {hasTopProducts && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Chi tiết sản phẩm bán chạy"
+                description="Danh sách ưu tiên giúp tối ưu tồn kho và chiến dịch marketing."
+              />
+              <Card className="space-y-4 border border-white/10 bg-white/90 p-6 shadow-lg backdrop-blur dark:bg-neutral-900/70">
+                <div className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-primary-6" />
+                  <h2 className="text-xl font-bold text-neutral-10">Top sản phẩm</h2>
+                </div>
+                <div className="space-y-3">
+                  {topProducts.slice(0, 10).map((product, index) => {
+                    const widthPercent =
+                      maxProductRevenue > 0
+                        ? Math.round(((product.revenue || 0) / maxProductRevenue) * 100)
+                        : 0;
+                    return (
+                      <div
+                        key={product.productId}
+                        className="rounded-2xl border border-neutral-3/60 bg-neutral-1/60 p-4 dark:border-neutral-8/60 dark:bg-neutral-9/40"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-semibold text-neutral-6">
+                              #{index + 1}
+                            </span>
+                            <div>
+                              <p className="font-semibold text-neutral-10">{product.productName}</p>
+                              <p className="text-sm text-neutral-6">
+                                Đã bán: {product.quantitySold} • Doanh thu:{" "}
+                                {product.revenue.toLocaleString("vi-VN")} đ
+                              </p>
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-primary-6/10 px-3 py-1 text-xs font-semibold text-primary-7">
+                            #{product.rank}
+                          </span>
+                        </div>
+                        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-3 dark:bg-neutral-8">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-primary-5 to-primary-7"
+                            style={{ width: `${widthPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            </section>
+          )}
+
+          {hasTopShops && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Chi tiết cửa hàng hàng đầu"
+                description="Theo dõi doanh thu và đơn hàng trên từng điểm bán."
+              />
+              <Card className="space-y-4 border border-white/10 bg-white/90 p-6 shadow-lg backdrop-blur dark:bg-neutral-900/70">
+                <div className="flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5 text-primary-6" />
+                  <h2 className="text-xl font-bold text-neutral-10">Top cửa hàng</h2>
+                </div>
+                <div className="space-y-3">
+                  {topShops.slice(0, 10).map((shop, index) => {
+                    const widthPercent =
+                      maxShopRevenue > 0
+                        ? Math.round(((shop.totalRevenue || 0) / maxShopRevenue) * 100)
+                        : 0;
+                    return (
+                      <div
+                        key={shop.shopId}
+                        className="rounded-2xl border border-neutral-3/60 bg-neutral-1/60 p-4 dark:border-neutral-8/60 dark:bg-neutral-9/40"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-semibold text-neutral-6">
+                              #{index + 1}
+                            </span>
+                            <div>
+                              <p className="font-semibold text-neutral-10">{shop.shopName}</p>
+                              <p className="text-sm text-neutral-6">
+                                Doanh thu: {shop.totalRevenue.toLocaleString("vi-VN")} đ • Đơn hàng:{" "}
+                                {shop.totalOrders}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-neutral-2 px-3 py-1 text-xs font-semibold text-neutral-7 dark:bg-neutral-8 dark:text-neutral-2">
+                            #{shop.rank}
+                          </span>
+                        </div>
+                        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-3 dark:bg-neutral-8">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-primary-3 via-primary-5 to-primary-7"
+                            style={{ width: `${widthPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            </section>
+          )}
+
+          {isLoading && (
+            <div className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-4 bg-background-elevated/80 px-4 py-8 text-sm text-neutral-6">
+              Đang đồng bộ dữ liệu mới...
+            </div>
+          )}
+        </div>
       </div>
     </ScrollView>
   );

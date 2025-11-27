@@ -112,7 +112,16 @@
     "btn-ghost-hover-bg": "rgba(15, 52, 96, 0.05)",
     "btn-danger-bg": "#FF424E",
     "btn-danger-hover": "#D62935",
-    "btn-danger-text": "#FFFFFF"
+    "btn-danger-text": "#FFFFFF",
+
+    "analytics-card-start": "#FFFFFF",
+    "analytics-card-end": "#F1F5FF",
+    "analytics-card-border": "rgba(15, 52, 96, 0.08)",
+    "analytics-text-primary": "#0F172A",
+    "analytics-text-muted": "rgba(15, 23, 42, 0.65)",
+    "analytics-grid": "rgba(71, 85, 105, 0.18)",
+    "analytics-tooltip-bg": "#FFFFFF",
+    "analytics-tooltip-border": "rgba(15, 52, 96, 0.15)"
   },
 
   "dark": {
@@ -228,6 +237,15 @@
     "btn-ghost-hover-bg": "rgba(228, 179, 67, 0.1)",
     "btn-danger-bg": "#FF6B6B",
     "btn-danger-hover": "#FF8787",
-    "btn-danger-text": "#0F0F10"
+    "btn-danger-text": "#0F0F10",
+
+    "analytics-card-start": "#09112B",
+    "analytics-card-end": "#050918",
+    "analytics-card-border": "rgba(255, 255, 255, 0.12)",
+    "analytics-text-primary": "#F8FAFC",
+    "analytics-text-muted": "rgba(226, 232, 240, 0.65)",
+    "analytics-grid": "rgba(148, 163, 184, 0.25)",
+    "analytics-tooltip-bg": "rgba(7, 13, 31, 0.95)",
+    "analytics-tooltip-border": "rgba(59, 130, 246, 0.35)"
   }
 }

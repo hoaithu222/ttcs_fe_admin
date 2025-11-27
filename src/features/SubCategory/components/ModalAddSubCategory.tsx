@@ -201,15 +201,15 @@ const ModalAddSubCategory: React.FC<Props> = ({ open, onOpenChange }) => {
                 sizeSelect="md"
               />
 
-              <Input
+              {/* <Input
                 name="sortOrder"
                 label="Thứ tự"
                 placeholder="0"
                 type="number"
                 value={String(formData.sortOrder ?? 0)}
                 onChange={(e) => setFormData({ ...formData, sortOrder: Number(e.target.value) })}
-              />
-            </div>
+              /> */}
+            </div> 
             {/* Image Icon */}
             <ImageIconUpload
               value={formData.iconImage}

@@ -1,8 +1,24 @@
 import React from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { TopShop } from "@/core/api/analytics/type";
 import { Card } from "@/foundation/components/info/Card";
 import { ShoppingBag } from "lucide-react";
+import {
+  axisTickStyle,
+  chartTheme,
+  formatLargeNumber,
+  legendWrapperStyle,
+  tooltipStyle,
+} from "./chartTheme";
 
 interface TopShopsChartProps {
   data: TopShop[];
@@ -10,29 +26,21 @@ interface TopShopsChartProps {
 }
 
 const TopShopsChart: React.FC<TopShopsChartProps> = ({ data, isLoading }) => {
-  if (isLoading) {
+  if (isLoading || !data || data.length === 0) {
+    const message = isLoading ? "Đang tải dữ liệu..." : "Chưa có dữ liệu";
     return (
-      <Card className="p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <ShoppingBag className="w-5 h-5 text-primary-6" />
-          <h2 className="text-xl font-bold text-neutral-10">Top cửa hàng hàng đầu</h2>
+      <Card className={chartTheme.card} style={chartTheme.cardStyle}>
+        <div className="flex items-center gap-2">
+          <div className="rounded-2xl bg-amber-500/15 p-3 text-amber-300">
+            <ShoppingBag className="h-5 w-5" />
+          </div>
+          <div>
+            <p className={`text-xs ${chartTheme.copy.eyebrow}`}>STORES</p>
+            <h2 className={`text-xl ${chartTheme.copy.heading}`}>Top cửa hàng hàng đầu</h2>
+          </div>
         </div>
-        <div className="h-80 flex items-center justify-center">
-          <p className="text-neutral-6">Đang tải dữ liệu...</p>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <ShoppingBag className="w-5 h-5 text-primary-6" />
-          <h2 className="text-xl font-bold text-neutral-10">Top cửa hàng hàng đầu</h2>
-        </div>
-        <div className="h-80 flex items-center justify-center">
-          <p className="text-neutral-6">Chưa có dữ liệu</p>
+        <div className={`flex h-80 items-center justify-center text-sm ${chartTheme.copy.muted}`}>
+          {message}
         </div>
       </Card>
     );
@@ -46,43 +54,53 @@ const TopShopsChart: React.FC<TopShopsChartProps> = ({ data, isLoading }) => {
   }));
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center space-x-2 mb-4">
-        <ShoppingBag className="w-5 h-5 text-primary-6" />
-        <h2 className="text-xl font-bold text-neutral-10">Top cửa hàng hàng đầu</h2>
+    <Card className={chartTheme.card} style={chartTheme.cardStyle}>
+      <div className="flex items-center gap-3 pb-4">
+        <div className="rounded-2xl bg-amber-500/15 p-3 text-amber-300">
+          <ShoppingBag className="h-5 w-5" />
+        </div>
+        <div>
+          <p className={`text-xs ${chartTheme.copy.eyebrow}`}>STORES</p>
+          <h2 className={`text-xl ${chartTheme.copy.heading}`}>Top cửa hàng hàng đầu</h2>
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <BarChart
+          data={chartData}
+          margin={{ top: 20, right: 24, left: 10, bottom: 60 }}
+          barGap={12}
+        >
+          <CartesianGrid
+            strokeDasharray="4 8"
+            stroke={chartTheme.gridStroke}
+            vertical={false}
+          />
           <XAxis
             dataKey="name"
-            angle={-45}
+            angle={-35}
             textAnchor="end"
-            height={100}
-            stroke="#6b7280"
-            style={{ fontSize: "11px" }}
-            tick={{ fill: "#6b7280" }}
+            height={80}
+            tick={axisTickStyle}
+            tickLine={false}
+            axisLine={{ stroke: chartTheme.gridStroke }}
           />
           <YAxis
             yAxisId="left"
-            stroke="#6b7280"
-            style={{ fontSize: "12px" }}
-            tick={{ fill: "#6b7280" }}
-            tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+            tick={axisTickStyle}
+            tickFormatter={(value) => formatLargeNumber(value)}
+            axisLine={{ stroke: chartTheme.gridStroke }}
+            tickLine={false}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            stroke="#6b7280"
-            style={{ fontSize: "12px" }}
-            tick={{ fill: "#6b7280" }}
+            tick={axisTickStyle}
+            axisLine={{ stroke: chartTheme.gridStroke }}
+            tickLine={false}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-            }}
+            contentStyle={tooltipStyle}
+            labelStyle={{ color: "#e2e8f0", fontWeight: 600 }}
             formatter={(value: number, name: string) => {
               if (name === "revenue") {
                 return [`${value.toLocaleString("vi-VN")} đ`, "Doanh thu"];
@@ -93,28 +111,31 @@ const TopShopsChart: React.FC<TopShopsChartProps> = ({ data, isLoading }) => {
               return [value, name];
             }}
           />
-          <Legend
-            wrapperStyle={{ paddingTop: "20px" }}
-            formatter={(value) => {
-              if (value === "revenue") return "Doanh thu";
-              if (value === "orders") return "Số đơn hàng";
-              return value;
-            }}
-          />
+          <Legend wrapperStyle={legendWrapperStyle} iconType="circle" />
           <Bar
             yAxisId="left"
             dataKey="revenue"
-            fill="#8b5cf6"
-            radius={[8, 8, 0, 0]}
+            fill="url(#shopRevenue)"
             name="revenue"
+            radius={[12, 12, 4, 4]}
           />
           <Bar
             yAxisId="right"
             dataKey="orders"
-            fill="#f59e0b"
-            radius={[8, 8, 0, 0]}
+            fill="url(#shopOrders)"
             name="orders"
+            radius={[12, 12, 4, 4]}
           />
+          <defs>
+            <linearGradient id="shopRevenue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#c2410c" />
+            </linearGradient>
+            <linearGradient id="shopOrders" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#fb7185" />
+              <stop offset="100%" stopColor="#be123c" />
+            </linearGradient>
+          </defs>
         </BarChart>
       </ResponsiveContainer>
     </Card>

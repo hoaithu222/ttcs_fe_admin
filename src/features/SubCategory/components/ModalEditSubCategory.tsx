@@ -250,7 +250,7 @@ const ModalEditSubCategory: React.FC<Props> = ({ open, onOpenChange, subCategory
                 sizeSelect="md"
               />
 
-              <Input
+              {/* <Input
                 name="sortOrder"
                 label="Thứ tự"
                 placeholder="0"
@@ -262,7 +262,7 @@ const ModalEditSubCategory: React.FC<Props> = ({ open, onOpenChange, subCategory
                     data: { ...formData.data, sortOrder: Number(e.target.value) },
                   })
                 }
-              />
+              /> */}
             </div>
             <ImageIconUpload
               value={formData.data.iconImage}
