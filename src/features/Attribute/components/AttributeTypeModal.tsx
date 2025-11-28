@@ -296,7 +296,7 @@ const AttributeTypeModal: React.FC<Props> = ({
               </div>
               {mode === "create" && (
                 <div className="border-t border-divider-1 pt-6">
-                  <div className="text-body-14 font-semibold text-neutral-9 mb-4">
+                  <div className="text-lg font-semibold text-neutral-9 mb-4">
                     Giá trị thuộc tính
                   </div>
                   <div className="flex gap-2 mb-3 flex-wrap">

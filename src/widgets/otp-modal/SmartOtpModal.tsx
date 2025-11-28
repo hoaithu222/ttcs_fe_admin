@@ -135,7 +135,7 @@ const SmartOtpModal: React.FC<SmartOtpModalProps> = ({ visible }) => {
         >
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
-            <Dialog.Title className="text-title-20-bold text-neutral-9">
+            <Dialog.Title className="text-2xl font-bold text-neutral-9">
               <IconCircleWrapper extraBorder>
                 <Icon name="SmartOtp" size="base" className="text-neutral-9" />
               </IconCircleWrapper>
@@ -146,7 +146,7 @@ const SmartOtpModal: React.FC<SmartOtpModalProps> = ({ visible }) => {
           </div>
           {/* Warning section */}
           {showWarningType && <WarningOtp type={showWarningType} typeOtp="M" />}
-          <span className="text-title-20-bold text-neutral-7">{tOtp("smartOtpTitle")}</span>
+          <span className="text-2xl font-bold text-neutral-7">{tOtp("smartOtpTitle")}</span>
           <p className="mb-6 text-body-14 text-neutral-7">{tOtp("smartOtpDescription")}</p>
           {/* OTP input */}
           <Controller

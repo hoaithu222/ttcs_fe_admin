@@ -40,7 +40,7 @@ const SectionTitle: React.FC<SectionTitleProps> = ({
   return (
     <div
       className={clsx(
-        "text-title-20-bold",
+        "text-2xl font-bold",
         color,
         { "sticky top-0 bg-background-base": sticky },
         className

@@ -169,7 +169,7 @@ const SmsOtpModal: React.FC<SmsOtpModalProps> = ({ visible }) => {
           )}
         >
           <div className="flex justify-between items-start mb-4">
-            <Dialog.Title className="text-title-20-bold text-neutral-9">
+            <Dialog.Title className="text-2xl font-bold text-neutral-9">
               <IconCircleWrapper>
                 <Icon name="SmartOtp" size="base" className="text-neutral-9" />
               </IconCircleWrapper>
@@ -180,7 +180,7 @@ const SmsOtpModal: React.FC<SmsOtpModalProps> = ({ visible }) => {
           </div>
 
           {Boolean(showWarningType) && <WarningOtp type={showWarningType as string} typeOtp="O" />}
-          <span className="text-title-20-bold text-neutral-7">{tOtp("title")}</span>
+          <span className="text-2xl font-bold text-neutral-7">{tOtp("title")}</span>
           <p className="mb-6 text-body-14 text-neutral-7">
             {tOtp("description", { phone: maskPhone(String(phone ?? "")) })}
           </p>
