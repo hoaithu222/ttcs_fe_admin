@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { X } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import {
@@ -7,6 +7,7 @@ import {
   selectChatStatus,
   selectTypingUsers,
   selectOnlineUsers,
+  selectConversations,
 } from "@/app/store/slices/chat/chat.selector";
 import { selectUser } from "@/features/Auth/components/slice/auth.selector";
 import {
@@ -27,6 +28,7 @@ import type { ChatMessage } from "@/core/api/chat/type";
 const ChatWindow: React.FC = () => {
   const dispatch = useAppDispatch();
   const currentConversation = useAppSelector(selectCurrentConversation);
+  const conversations = useAppSelector(selectConversations);
   const messages = useAppSelector((state) =>
     currentConversation
       ? selectChatMessages(currentConversation._id)(state)
@@ -35,12 +37,25 @@ const ChatWindow: React.FC = () => {
   const status = useAppSelector(selectChatStatus);
   const user = useAppSelector(selectUser);
   const currentUserId = user?._id;
-  const typingUsers = useAppSelector((state) =>
-    currentConversation ? selectTypingUsers(currentConversation._id)(state) : []
+  // Memoized selectors for typing/online users to avoid selector warnings and unnecessary re-renders
+  const typingUsersSelector = useMemo(
+    () =>
+      currentConversation
+        ? selectTypingUsers(currentConversation._id)
+        : () => [],
+    [currentConversation?._id]
   );
-  const onlineUsers = useAppSelector((state) =>
-    currentConversation ? selectOnlineUsers(currentConversation._id)(state) : []
+
+  const onlineUsersSelector = useMemo(
+    () =>
+      currentConversation
+        ? selectOnlineUsers(currentConversation._id)
+        : () => [],
+    [currentConversation?._id]
   );
+
+  const typingUsers = useAppSelector(typingUsersSelector as any);
+  const onlineUsers = useAppSelector(onlineUsersSelector as any);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<any>(null);
@@ -201,9 +216,14 @@ const ChatWindow: React.FC = () => {
     );
   }
 
-  const otherParticipant = currentConversation.participants.find(
+  // Always get conversation from list to ensure participants are preserved
+  const conversationToUse = conversations.find(
+    (c) => c._id === currentConversation._id
+  ) || currentConversation;
+  
+  const otherParticipant = conversationToUse.participants.find(
     (p: { userId: string }) => p.userId !== currentUserId
-  ) || currentConversation.participants[0];
+  ) || conversationToUse.participants[0];
   
   const isOtherUserOnline = otherParticipant && onlineUsers.includes(otherParticipant.userId);
   const isOtherUserTyping = otherParticipant && typingUsers.includes(otherParticipant.userId);
@@ -282,6 +302,7 @@ const ChatWindow: React.FC = () => {
                     message={msg}
                     isOwn={msg.senderId === currentUserId}
                     currentUserId={currentUserId}
+                    conversation={currentConversation}
                   />
                 );
               })}

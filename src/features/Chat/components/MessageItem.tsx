@@ -4,20 +4,65 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Check, CheckCheck } from "lucide-react";
 import Image from "@/foundation/components/icons/Image";
-import type { ChatMessage } from "@/core/api/chat/type";
+import type { ChatMessage, ChatConversation } from "@/core/api/chat/type";
 
 interface MessageItemProps {
   message: ChatMessage;
   isOwn: boolean;
   currentUserId?: string;
+  conversation?: ChatConversation | null;
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({ message, isOwn }) => {
+const MessageItem: React.FC<MessageItemProps> = ({ message, isOwn, conversation, currentUserId }) => {
   const messageDate = new Date(message.createdAt);
   const isToday = messageDate.toDateString() === new Date().toDateString();
   const timeStr = format(messageDate, isToday ? "HH:mm" : "dd/MM/yyyy HH:mm", {
     locale: vi,
   });
+
+  // Get sender avatar - with special handling for CSKH/admin conversations
+  const getSenderAvatar = () => {
+    if (!conversation || !currentUserId) {
+      return message.senderAvatar || null;
+    }
+
+    const isCSKHConversation =
+      conversation.type === "admin" &&
+      (conversation as any).metadata?.context === "CSKH";
+
+    // In CSKH conversations on admin side:
+    // - Messages from user: always use the "other participant" avatar (the user),
+    //   because backend may send CSKH avatar in senderAvatar for all messages.
+    if (isCSKHConversation && message.senderId !== currentUserId) {
+      const otherParticipant =
+        conversation.participants.find(
+          (p: { userId: string }) => p.userId !== currentUserId
+        ) || conversation.participants[0];
+
+      if (otherParticipant?.avatar) {
+        return otherParticipant.avatar;
+      }
+    }
+
+    // Default behavior: prefer message.senderAvatar
+    if (message.senderAvatar) {
+      return message.senderAvatar;
+    }
+
+    // Fallback: find participant by senderId
+    if (message.senderId) {
+      const senderParticipant = conversation.participants.find(
+        (p: { userId: string }) => p.userId === message.senderId
+      );
+      if (senderParticipant?.avatar) {
+        return senderParticipant.avatar;
+      }
+    }
+
+    return null;
+  };
+
+  const senderAvatar = getSenderAvatar();
 
   return (
     <div
@@ -29,9 +74,9 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isOwn }) => {
       {!isOwn && (
         <div className="flex-shrink-0">
           <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-primary-5 to-primary-7 flex items-center justify-center shadow-sm">
-            {message.senderAvatar ? (
+            {senderAvatar ? (
               <Image
-                src={message.senderAvatar}
+                src={senderAvatar}
                 alt={message.senderName || "User"}
                 rounded
                 className="w-full h-full object-cover"

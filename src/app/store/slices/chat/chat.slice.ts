@@ -129,8 +129,16 @@ const chatSlice = createSlice({
           : newConversation;
         
         // Set current conversation with unreadCount = 0 (user is viewing it)
+        // Ensure participants are properly preserved - prefer from conversationToSet, fallback to newConversation
+        const participantsToSet = (conversationToSet.participants && conversationToSet.participants.length > 0)
+          ? [...conversationToSet.participants]
+          : (newConversation.participants && newConversation.participants.length > 0
+              ? [...newConversation.participants]
+              : []);
+        
         state.currentConversation = {
           ...conversationToSet,
+          participants: participantsToSet,
           unreadCount: 0, // Reset unread count when viewing
         };
         
@@ -286,22 +294,50 @@ const chatSlice = createSlice({
         (c) => c._id === conversation._id
       );
 
-      const isCurrentlyViewing = state.currentConversation?._id === conversation._id;
+      const isCurrentlyViewing =
+        state.currentConversation?._id === conversation._id;
       
       if (conversationIndex !== -1) {
         // Update existing conversation
         // Backend now sends correct unreadCountMe and unreadCountTo for current user via direct room
         // Trust the backend's calculation
-        let finalUnreadCountMe = conversation.unreadCountMe ?? conversation.unreadCount ?? 0;
+        let finalUnreadCountMe =
+          conversation.unreadCountMe ?? conversation.unreadCount ?? 0;
         const finalUnreadCountTo = conversation.unreadCountTo ?? 0;
-        
+
         // If viewing, always reset unreadCountMe to 0 (user is actively viewing, so no unread)
         if (isCurrentlyViewing) {
           finalUnreadCountMe = 0;
         }
-        
+
+        // Preserve participant-level fields like avatar when backend doesn't send them
+        const existingParticipants =
+          state.conversations[conversationIndex].participants || [];
+        const incomingParticipants = conversation.participants || [];
+
+        const mergedParticipants =
+          incomingParticipants.length > 0
+            ? incomingParticipants.map((incoming: any) => {
+                const existing =
+                  existingParticipants.find(
+                    (p: any) => p.userId === incoming.userId
+                  ) || {};
+                return {
+                  ...existing,
+                  ...incoming,
+                  // If backend không gửi avatar, giữ avatar cũ
+                  avatar:
+                    typeof incoming.avatar === "string" &&
+                    incoming.avatar.trim().length > 0
+                      ? incoming.avatar
+                      : existing.avatar,
+                };
+              })
+            : existingParticipants;
+
         state.conversations[conversationIndex] = {
           ...conversation,
+          participants: mergedParticipants,
           unreadCountMe: finalUnreadCountMe,
           unreadCountTo: finalUnreadCountTo,
           unreadCount: finalUnreadCountMe, // Backward compatibility
@@ -315,12 +351,18 @@ const chatSlice = createSlice({
         const newConversation = isCurrentlyViewing
           ? { 
               ...conversation, 
+              participants: conversation.participants
+                ? [...conversation.participants]
+                : [],
               unreadCountMe: 0, 
               unreadCountTo: unreadCountTo, // Keep unreadCountTo even when viewing
               unreadCount: 0 
             }
           : { 
               ...conversation, 
+              participants: conversation.participants
+                ? [...conversation.participants]
+                : [],
               unreadCountMe: unreadCountMe,
               unreadCountTo: unreadCountTo,
               unreadCount: unreadCountMe 
@@ -338,8 +380,34 @@ const chatSlice = createSlice({
       // Update current conversation if it matches
       if (isCurrentlyViewing && state.currentConversation) {
         const unreadCountTo = conversation.unreadCountTo ?? 0;
+
+        const existingParticipants =
+          state.currentConversation.participants || [];
+        const incomingParticipants = conversation.participants || [];
+
+        const mergedParticipants =
+          incomingParticipants.length > 0
+            ? incomingParticipants.map((incoming: any) => {
+                const existing =
+                  existingParticipants.find(
+                    (p: any) => p.userId === incoming.userId
+                  ) || {};
+                return {
+                  ...existing,
+                  ...incoming,
+                  avatar:
+                    typeof incoming.avatar === "string" &&
+                    incoming.avatar.trim().length > 0
+                      ? incoming.avatar
+                      : existing.avatar,
+                };
+              })
+            : existingParticipants;
+
         state.currentConversation = {
+          ...state.currentConversation,
           ...conversation,
+          participants: mergedParticipants,
           unreadCountMe: 0, // Always reset unread count when viewing
           unreadCountTo: unreadCountTo, // Keep unreadCountTo even when viewing
           unreadCount: 0, // Backward compatibility

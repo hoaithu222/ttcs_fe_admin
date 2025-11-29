@@ -15,6 +15,7 @@ import { toastUtils } from "@/shared/utils/toast.utils";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { updateNotificationFromSocket } from "@/app/store/slices/notification/notification.slice";
 import { updateMessageFromSocket, updateConversationFromSocket } from "@/app/store/slices/chat/chat.slice";
+import { selectConversations } from "@/app/store/slices/chat/chat.selector";
 
 const MAX_NOTIFICATIONS = 50;
 
@@ -87,6 +88,7 @@ const toRealtimeNotification = (
 const RealtimeProvider = ({ children }: PropsWithChildren) => {
   const dispatch = useAppDispatch();
   const authUser = useAppSelector((state) => (state as any).auth.user);
+  const conversations = useAppSelector(selectConversations);
   const [hasTokens, setHasTokens] = useState(() => tokenStorage.hasTokens());
   const [notifications, setNotifications] = useState<RealtimeNotification[]>(
     []
@@ -235,12 +237,29 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
         }
 
         if (payload?.conversationId && messageData) {
+          // Try to get senderAvatar from conversation participants if missing
+          let senderAvatar = messageData.senderAvatar || payload.senderAvatar;
+          if (!senderAvatar && payload.conversationId) {
+            const conversation = conversations.find(
+              (c) => c._id === payload.conversationId
+            );
+            if (conversation) {
+              const senderId = messageData.senderId || payload.senderId;
+              const senderParticipant = conversation.participants.find(
+                (p: { userId: string }) => p.userId === senderId
+              );
+              if (senderParticipant?.avatar) {
+                senderAvatar = senderParticipant.avatar;
+              }
+            }
+          }
+
           const message = {
             _id: messageData._id || payload.messageId || payload._id || generateNotificationId(),
             conversationId: payload.conversationId,
             senderId: messageData.senderId || payload.senderId || "",
             senderName: messageData.senderName || payload.senderName,
-            senderAvatar: messageData.senderAvatar || payload.senderAvatar,
+            senderAvatar: senderAvatar,
             message: messageData.message || payload.message || "",
             attachments: messageData.attachments || payload.attachments || [],
             metadata: messageData.metadata || payload.metadata || {},
@@ -309,12 +328,29 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
         }
 
         if (payload?.conversationId && messageData) {
+          // Try to get senderAvatar from conversation participants if missing
+          let senderAvatar = messageData.senderAvatar || payload.senderAvatar;
+          if (!senderAvatar && payload.conversationId) {
+            const conversation = conversations.find(
+              (c) => c._id === payload.conversationId
+            );
+            if (conversation) {
+              const senderId = messageData.senderId || payload.senderId;
+              const senderParticipant = conversation.participants.find(
+                (p: { userId: string }) => p.userId === senderId
+              );
+              if (senderParticipant?.avatar) {
+                senderAvatar = senderParticipant.avatar;
+              }
+            }
+          }
+
           const message = {
             _id: messageData._id || payload.messageId || payload._id || generateNotificationId(),
             conversationId: payload.conversationId,
             senderId: messageData.senderId || payload.senderId || "",
             senderName: messageData.senderName || payload.senderName,
-            senderAvatar: messageData.senderAvatar || payload.senderAvatar,
+            senderAvatar: senderAvatar,
             message: messageData.message || payload.message || "",
             attachments: messageData.attachments || payload.attachments || [],
             metadata: messageData.metadata || payload.metadata || {},
@@ -373,7 +409,7 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
         socketClients.adminChat?.disconnect(true);
       }
     };
-  }, [hasTokens, dispatch, authUser]);
+  }, [hasTokens, dispatch, authUser, conversations]);
 
   const contextValue = useMemo(
     () => ({

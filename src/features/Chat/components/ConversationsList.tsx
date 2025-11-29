@@ -19,6 +19,7 @@ import Input from "@/foundation/components/input/Input";
 import Tabs from "@/foundation/components/navigation/tabs/Tab";
 import Popover from "@/foundation/components/popover/Popever";
 import type { ChatConversation } from "@/core/api/chat/type";
+import ScrollView from "@/foundation/components/scroll/ScrollView";
 
 type FilterTab = "all" | "unread";
 type SortOption = "time" | "name";
@@ -46,8 +47,18 @@ const ConversationsList: React.FC = () => {
   };
 
   const getOtherParticipant = (conversation: ChatConversation) => {
+    if (!conversation?.participants || conversation.participants.length === 0) {
+      return null;
+    }
     if (!currentUserId) return conversation.participants[0];
     return conversation.participants.find((p) => p.userId !== currentUserId) || conversation.participants[0];
+  };
+
+  // Helper function to truncate text to ~30 characters
+  const truncateText = (text: string | undefined | null, maxLength: number = 30): string => {
+    if (!text || typeof text !== 'string') return text || "";
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
   };
 
   const formatLastMessageTime = (dateString?: string) => {
@@ -102,9 +113,7 @@ const ConversationsList: React.FC = () => {
     <div className="bg-background-base border-b border-neutral-3">
       <Form.Root>
         <div className="px-4 pt-4 pb-3">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-bold text-neutral-10">Tin nhắn</h2>
-          </div>
+         
 
           {/* Search Input */}
           <div className="mb-3">
@@ -191,9 +200,30 @@ const ConversationsList: React.FC = () => {
 
   // Render conversation item
   const renderConversationItem = (conversation: ChatConversation) => {
-    const otherParticipant = getOtherParticipant(conversation);
+    // Always use conversation from list, not currentConversation, to ensure participants are preserved
+    const conversationToUse =
+      conversations.find((c: ChatConversation) => c._id === conversation._id) ||
+      conversation;
+
+    const otherParticipant = getOtherParticipant(conversationToUse);
     const isActive = currentConversation?._id === conversation._id;
     const hasUnread = (conversation.unreadCount || 0) > 0;
+    
+    // Get avatar with fallback - ensure it's always available
+    // Use conversation participants directly to avoid stale data
+    const participantAvatar = otherParticipant?.avatar;
+    const avatar = participantAvatar && typeof participantAvatar === 'string' && participantAvatar.trim() ? participantAvatar : null;
+    const displayName = otherParticipant?.name || "Người dùng";
+
+    // DEBUG LOG: theo dõi data avatar / participants cho từng conversation
+    console.log("[Admin Chat][ConversationsList] render item", {
+      conversationId: conversation._id,
+      isActive,
+      participantsFromStore: conversationToUse.participants,
+      otherParticipant,
+      avatarFromParticipant: participantAvatar,
+      avatarUsed: avatar,
+    });
 
     return (
       <div
@@ -209,16 +239,23 @@ const ConversationsList: React.FC = () => {
       >
         <div className="flex-shrink-0 relative">
           <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-3 flex items-center justify-center shadow-sm">
-            {otherParticipant?.avatar ? (
+            {avatar ? (
               <Image
-                src={otherParticipant.avatar}
-                alt={otherParticipant.name || "User"}
+                src={avatar}
+                alt={displayName}
                 rounded
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to initial if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  if (target.parentElement) {
+                    target.style.display = 'none';
+                  }
+                }}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary-6 to-primary-7 text-neutral-1 flex items-center justify-center text-base font-bold">
-                {(otherParticipant?.name || "U")[0].toUpperCase()}
+                {displayName[0].toUpperCase()}
               </div>
             )}
           </div>
@@ -232,11 +269,11 @@ const ConversationsList: React.FC = () => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1.5">
             <h3 className={clsx(
-              "text-sm truncate",
+              "text-sm text-left",
               isActive ? "text-primary-9 font-bold" : "text-neutral-10 font-semibold",
               hasUnread && !isActive && "font-bold"
             )}>
-              {otherParticipant?.name || "Người dùng"}
+              {truncateText(otherParticipant?.name || "Người dùng")}
             </h3>
             {conversation.lastMessage && (
               <span className="text-xs text-neutral-6 flex-shrink-0 ml-2 font-medium">
@@ -276,11 +313,11 @@ const ConversationsList: React.FC = () => {
               // If has text or no message, show text
               return (
                 <p className={clsx(
-                  "text-sm truncate",
+                  "text-sm text-left",
                   isActive ? "text-neutral-8" : "text-neutral-7",
                   hasUnread && !isActive && "font-medium text-neutral-9"
                 )}>
-                  {hasText ? lastMessage.message : "Chưa có tin nhắn"}
+                  {hasText ? truncateText(lastMessage.message) : "Chưa có tin nhắn"}
                 </p>
               );
             })()}
@@ -333,11 +370,11 @@ const ConversationsList: React.FC = () => {
     <div className="flex flex-col h-full min-h-[calc(100vh-65px)] bg-background-1">
       {renderHeader()}
 
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <ScrollView className="flex-1 min-h-0 overflow-y-auto">
         {filteredAndSortedConversations.map((conversation: ChatConversation) =>
           renderConversationItem(conversation)
         )}
-      </div>
+      </ScrollView>
     </div>
   );
 };
