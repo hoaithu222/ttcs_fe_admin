@@ -33,9 +33,9 @@ const Sidebar = () => {
     { key: "attributes", icon: FolderOpen, path: NAVIGATION_CONFIG.attributes.path },
     { key: "shops", icon: ShoppingBag, path: NAVIGATION_CONFIG.shops.path },
     { key: "analytics", icon: BarChart3, path: NAVIGATION_CONFIG.analytics.path },
-    { key: "wallets", icon: Wallet, path: NAVIGATION_CONFIG.wallets.path },
     { key: "chat", icon: MessageSquare, path: NAVIGATION_CONFIG.chat.path },
-    { key: "settings", icon: Settings, path: NAVIGATION_CONFIG.settings.path },
+    { key: "wallets", icon: Wallet, path: NAVIGATION_CONFIG.wallets.path },
+    // { key: "settings", icon: Settings, path: NAVIGATION_CONFIG.settings.path },
   ];
 
   const handleLogout = () => {
@@ -64,7 +64,7 @@ const Sidebar = () => {
                 style={{ animationDelay: `${index * 50}ms` }}
                 className={`group relative flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98] ${
                   isActive
-                    ? "shadow-md text-primary-6 bg-primary-10 hover:bg-primary-10"
+                    ? "shadow-md text-primary-6 bg-primary-2 hover:bg-primary-3"
                     : "text-neutral-6 hover:text-primary-6 hover:bg-neutral-2/70 hover:shadow-sm"
                 }`}
               >

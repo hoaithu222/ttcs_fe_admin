@@ -1,5 +1,14 @@
 import { call, put, takeEvery, all } from "redux-saga/effects";
 import { analyticsApi } from "@/core/api/analytics";
+import type {
+  AnalyticsQuery,
+  TimeSeriesData,
+  TopProduct,
+  TopShop,
+  OrderStatusDistribution,
+  AverageOrderValue,
+  RevenueData,
+} from "@/core/api/analytics/type";
 import { addToast } from "@/app/store/slices/toast";
 import type { fetchAnalyticsDataStart } from "./analytics.slice";
 import { fetchAnalyticsDataSuccess, fetchAnalyticsDataFailure } from "./analytics.slice";
@@ -22,8 +31,24 @@ function* fetchAnalyticsDataWorker(
   action: FetchAnalyticsDataAction
 ): Generator<unknown, void, any> {
   try {
-    const query = action.payload || {};
-    console.log("🚀 [Analytics Saga] Fetching analytics data with query:", query);
+    const query: AnalyticsQuery | undefined = action.payload || undefined;
+
+    // Map UI query => backend query params
+    const apiQuery: any = query
+      ? {
+          from: query.startDate,
+          to: query.endDate,
+          granularity:
+            query.period === "month" || query.period === "year"
+              ? "month"
+              : query.period === "day"
+              ? "day"
+              : undefined,
+          limit: query.limit,
+        }
+      : {};
+
+    console.log("🚀 [Analytics Saga] Fetching analytics data with query:", apiQuery);
 
     // Fetch analytics data in parallel using redux-saga all
     const [
@@ -34,63 +59,117 @@ function* fetchAnalyticsDataWorker(
       orderStatusResponse,
       aovResponse,
     ] = yield all([
-      call([analyticsApi, analyticsApi.getAdminRevenue], query),
-      call([analyticsApi, analyticsApi.getRevenueTimeSeries], query),
-      call([analyticsApi, analyticsApi.getTopProducts], query),
-      call([analyticsApi, analyticsApi.getTopShops], query),
+      call([analyticsApi, analyticsApi.getAdminRevenue], apiQuery),
+      call([analyticsApi, analyticsApi.getRevenueTimeSeries], apiQuery),
+      call([analyticsApi, analyticsApi.getTopProducts], apiQuery),
+      call([analyticsApi, analyticsApi.getTopShops], apiQuery),
+      // Endpoint không nhận query nên không truyền apiQuery để tránh lỗi type
       call([analyticsApi, analyticsApi.getOrderStatusDistribution]),
-      call([analyticsApi, analyticsApi.getAverageOrderValue], query),
+      call([analyticsApi, analyticsApi.getAverageOrderValue], apiQuery),
     ]);
 
-    // Handle admin revenue - backend returns { items, totals }
-    const adminRevenueData = adminRevenueResponse.data;
-    const revenueData = adminRevenueData?.totals
+    /**
+     * Normalize admin revenue
+     * Backend success payload: { items, totals }
+     */
+    const adminRevenuePayload = (adminRevenueResponse as any).data;
+    const revenueData: RevenueData | undefined = adminRevenuePayload?.totals
       ? {
-          totalRevenue: adminRevenueData.totals.netRevenue || 0,
+          totalRevenue: adminRevenuePayload.totals.netRevenue || 0,
           period: "all",
           growthRate: 0,
           previousPeriodRevenue: 0,
         }
       : undefined;
 
-    // Handle time series - backend returns array directly
-    const timeSeriesData = Array.isArray(revenueTimeSeriesResponse.data)
-      ? revenueTimeSeriesResponse.data
-      : revenueTimeSeriesResponse.data?.data || [];
+    /**
+     * Normalize time series
+     * Backend success payload: data: items[]
+     * item: { bucket, netRevenue, orders, ... }
+     */
+    const timeSeriesRaw: any[] = Array.isArray((revenueTimeSeriesResponse as any).data)
+      ? (revenueTimeSeriesResponse as any).data
+      : (revenueTimeSeriesResponse as any).data?.data || [];
 
-    // Handle top products - backend returns array directly
-    const topProductsData = Array.isArray(topProductsResponse.data)
-      ? topProductsResponse.data
-      : topProductsResponse.data?.products || [];
+    const timeSeriesData: TimeSeriesData[] = timeSeriesRaw.map((item: any) => ({
+      date: item.bucket || item.date || "",
+      revenue: item.netRevenue ?? item.revenue ?? 0,
+      orders: item.orders ?? 0,
+      customers: item.customers ?? 0,
+    }));
 
-    // Handle top shops - backend returns array directly
-    const topShopsData = Array.isArray(topShopsResponse.data)
-      ? topShopsResponse.data.map((shop: any) => ({
-          shopId: shop.shopId || shop._id || "",
-          shopName: shop.shopName || shop.name || "",
-          shopLogo: shop.shopLogo || shop.logo,
-          totalRevenue: shop.netRevenue || shop.totalRevenue || shop.revenue || 0,
-          totalOrders: shop.orders || shop.totalOrders || shop.orderCount || 0,
-          rank: shop.rank || 0,
-        }))
-      : topShopsResponse.data?.shops?.map((shop: any) => ({
-          shopId: shop.shopId,
-          shopName: shop.shopName,
-          shopLogo: shop.shopLogo,
-          totalRevenue: shop.totalRevenue || shop.revenue || 0,
-          totalOrders: shop.totalOrders || shop.orderCount || 0,
-          rank: shop.rank || 0,
-        })) || [];
+    /**
+     * Normalize top products
+     * Backend success payload: data: items[]
+     * item: { productId, quantity, revenue, ordersCount, product: { name, ... } }
+     */
+    const topProductsRaw: any[] = Array.isArray((topProductsResponse as any).data)
+      ? (topProductsResponse as any).data
+      : (topProductsResponse as any).data?.products || [];
 
-    // Handle order status distribution - backend returns array directly
-    const orderStatusData = Array.isArray(orderStatusResponse.data)
-      ? orderStatusResponse.data
-      : orderStatusResponse.data?.distribution || [];
+    const topProductsData: TopProduct[] = topProductsRaw.map(
+      (item: any, index: number): TopProduct => ({
+        productId: item.productId || item.product?._id || "",
+        productName: item.productName || item.product?.name || "Sản phẩm",
+        productImage: item.productImage || item.product?.imageUrl,
+        totalSales: item.ordersCount ?? item.orders ?? 0,
+        revenue: item.revenue ?? 0,
+        quantitySold: item.quantity ?? item.quantitySold ?? 0,
+        rank: item.rank ?? index + 1,
+      })
+    );
 
-    // Handle average order value - backend returns { averageOrderValue, orders }
-    const aovData = aovResponse.data
+    /**
+     * Normalize top shops
+     * Backend success payload: data: items[]
+     * item: { shopId, orders, netRevenue, ... }
+     */
+    const topShopsRaw: any[] = Array.isArray((topShopsResponse as any).data)
+      ? (topShopsResponse as any).data
+      : (topShopsResponse as any).data?.shops || [];
+
+    const topShopsData: TopShop[] = topShopsRaw.map((shop: any, index: number): TopShop => ({
+      shopId: shop.shopId || shop._id || "",
+      shopName: shop.shopName || shop.name || "",
+      shopLogo: shop.shopLogo || shop.logo,
+      totalRevenue: shop.netRevenue || shop.totalRevenue || shop.revenue || 0,
+      totalOrders: shop.orders || shop.totalOrders || shop.orderCount || 0,
+      rank: shop.rank ?? index + 1,
+    }));
+
+    /**
+     * Normalize order status distribution
+     * Backend success payload: data: items[]
+     * item: { status, count }
+     */
+    const orderStatusRaw: any[] = Array.isArray((orderStatusResponse as any).data)
+      ? (orderStatusResponse as any).data
+      : (orderStatusResponse as any).data?.distribution || [];
+
+    const totalOrderCount = orderStatusRaw.reduce(
+      (sum, it) => sum + (it.count ?? 0),
+      0
+    );
+
+    const orderStatusData: OrderStatusDistribution[] = orderStatusRaw.map(
+      (item: any): OrderStatusDistribution => ({
+        status: item.status,
+        count: item.count ?? 0,
+        percentage:
+          totalOrderCount > 0
+            ? Number(((item.count ?? 0) / totalOrderCount) * 100)
+            : 0,
+      })
+    );
+
+    /**
+     * Normalize AOV
+     * Backend success payload: data: { averageOrderValue, orders }
+     */
+    const aovPayload = (aovResponse as any).data;
+    const aovData: AverageOrderValue | undefined = aovPayload
       ? {
-          aov: aovResponse.data.averageOrderValue || 0,
+          aov: aovPayload.averageOrderValue || 0,
           period: "all",
           previousPeriodAov: 0,
           growthRate: 0,

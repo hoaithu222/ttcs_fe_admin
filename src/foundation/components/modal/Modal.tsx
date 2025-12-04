@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import Button from "../buttons/Button";
-import Icon from "../icons/Icon";
+
 
 type ModalSize =
   | "xs"
@@ -204,7 +204,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           {showCloseIcon && (
             <div className={clsx(closeIconWrapperClassName)}>
               <Dialog.Close asChild>
-                <X className="text-neutral-6 dark:text-neutral-0" />
+                <X className="text-neutral-10 " />
               </Dialog.Close>
             </div>
           )}
