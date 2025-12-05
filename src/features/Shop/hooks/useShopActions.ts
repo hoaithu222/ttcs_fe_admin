@@ -6,6 +6,7 @@ import {
   approveShopStart,
   rejectShopStart,
   suspendShopStart,
+  unlockShopStart,
   setSelectedShop,
 } from "../slice/Shop.slice";
 import { Shop } from "@/core/api/shops/type";
@@ -16,6 +17,7 @@ import {
   selectApproveShopStatus,
   selectRejectShopStatus,
   selectSuspendShopStatus,
+  selectUnlockShopStatus,
 } from "../slice/Shop.selector";
 import { useSelector } from "react-redux";
 import { ReduxStateType } from "@/app/store/types";
@@ -28,6 +30,7 @@ export const useShopActions = () => {
   const approveShopStatus = useSelector(selectApproveShopStatus);
   const rejectShopStatus = useSelector(selectRejectShopStatus);
   const suspendShopStatus = useSelector(selectSuspendShopStatus);
+  const unlockShopStatus = useSelector(selectUnlockShopStatus);
 
   const fetchShops = useCallback(
     (payload: {
@@ -62,6 +65,7 @@ export const useShopActions = () => {
     approveShopStatus,
     rejectShopStatus,
     suspendShopStatus,
+    unlockShopStatus,
     dispatch,
   ]);
 
@@ -93,6 +97,13 @@ export const useShopActions = () => {
     [dispatch]
   );
 
+  const unlockShop = useCallback(
+    (id: string) => {
+      dispatch(unlockShopStart(id));
+    },
+    [dispatch]
+  );
+
   const selectShop = useCallback(
     (shop: Shop | null) => {
       dispatch(setSelectedShop(shop));
@@ -106,6 +117,7 @@ export const useShopActions = () => {
     approveShop,
     rejectShop,
     suspendShop,
+    unlockShop,
     selectShop,
   };
 };

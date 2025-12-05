@@ -18,17 +18,18 @@ const ShopPage: React.FC = () => {
   const isLoading = useAppSelector(selectShopLoading);
   const pagination = useAppSelector(selectShopPagination);
   const filters = useAppSelector(selectShopFilters);
-  const { fetchShops, deleteShop, approveShop, rejectShop, suspendShop } = useShopActions();
+  const { fetchShops, deleteShop, approveShop, rejectShop, suspendShop, unlockShop } = useShopActions();
 
   const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
   const [isConfirmApproveModalOpen, setIsConfirmApproveModalOpen] = useState(false);
   const [isConfirmRejectModalOpen, setIsConfirmRejectModalOpen] = useState(false);
   const [isConfirmSuspendModalOpen, setIsConfirmSuspendModalOpen] = useState(false);
+  const [isConfirmUnlockModalOpen, setIsConfirmUnlockModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<
-    "delete" | "approve" | "reject" | "suspend" | null
+    "delete" | "approve" | "reject" | "suspend" | "unlock" | null
   >(null);
 
   useEffect(() => {
@@ -71,6 +72,12 @@ const ShopPage: React.FC = () => {
     setIsConfirmSuspendModalOpen(true);
   };
 
+  const handleRequestUnlock = (id: string) => {
+    setPendingActionId(id);
+    setPendingAction("unlock");
+    setIsConfirmUnlockModalOpen(true);
+  };
+
   const handleViewShop = (shop: Shop) => {
     setSelectedShop(shop);
     setIsViewModalOpen(true);
@@ -96,6 +103,10 @@ const ShopPage: React.FC = () => {
         suspendShop(pendingActionId);
         setIsConfirmSuspendModalOpen(false);
         break;
+      case "unlock":
+        unlockShop(pendingActionId);
+        setIsConfirmUnlockModalOpen(false);
+        break;
     }
 
     setPendingActionId(null);
@@ -119,6 +130,7 @@ const ShopPage: React.FC = () => {
     setIsConfirmApproveModalOpen(false);
     setIsConfirmRejectModalOpen(false);
     setIsConfirmSuspendModalOpen(false);
+    setIsConfirmUnlockModalOpen(false);
     setPendingActionId(null);
     setPendingAction(null);
   };
@@ -144,6 +156,7 @@ const ShopPage: React.FC = () => {
           onApprove={handleRequestApprove}
           onReject={handleRequestReject}
           onSuspend={handleRequestSuspend}
+          onUnlock={handleRequestUnlock}
           onDelete={handleRequestDelete}
           page={pagination.page}
           totalPages={pagination.totalPages}
@@ -228,6 +241,23 @@ const ShopPage: React.FC = () => {
           container: "bg-background-1",
           border: "border-error",
           glow: "shadow-[0_0_0_6px_rgba(239,68,68,0.08)]",
+        }}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
+      />
+
+      <ConfirmModal
+        open={isConfirmUnlockModalOpen}
+        onOpenChange={setIsConfirmUnlockModalOpen}
+        title="Xác nhận mở khóa cửa hàng"
+        content="Bạn có chắc chắn muốn mở khóa cửa hàng này? Cửa hàng sẽ được kích hoạt lại và có thể tiếp tục hoạt động."
+        confirmText="Mở khóa"
+        cancelText="Hủy"
+        iconType="success"
+        decorClasses={{
+          container: "bg-background-1",
+          border: "border-success",
+          glow: "shadow-[0_0_0_6px_rgba(34,197,94,0.08)]",
         }}
         onConfirm={handleConfirmAction}
         onCancel={handleCancelAction}

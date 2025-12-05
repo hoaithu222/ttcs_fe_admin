@@ -424,7 +424,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   };
 
   const renderIconLeft = () =>
-    hideIconLeft ? null : (iconLeft ?? <Search className={iconSizeClasses[iconSize]} />);
+    hideIconLeft ? null : (iconLeft ?? <Search className={iconSizeClasses[iconSize] + " text-neutral-6"} />);
   const renderIconRight = () =>
     hideIconRight
       ? null

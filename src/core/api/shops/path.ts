@@ -12,6 +12,7 @@ export const SHOPS_ENDPOINTS = {
   APPROVE: "/shops/:id/approve",
   REJECT: "/shops/:id/reject",
   SUSPEND: "/shops/:id/suspend",
+  UNLOCK: "/shops/:id/unlock",
 } as const;
 
 // Generic endpoint builder

@@ -98,6 +98,13 @@ class ShopsApiService extends VpsHttpClient {
     const response = await this.post(endpoint);
     return response.data;
   }
+
+  // Unlock shop (admin only)
+  async unlockShop(id: string): Promise<ApiSuccess<Shop>> {
+    const endpoint = buildEndpoint(SHOPS_ENDPOINTS.UNLOCK, { id });
+    const response = await this.post(endpoint);
+    return response.data;
+  }
 }
 
 // Export singleton instance

@@ -257,12 +257,13 @@ const ModalViewShop: React.FC<ModalViewShopProps> = ({
                     <span className="ml-2 text-sm font-medium">{(shop as any).taxId}</span>
                   </div>
                 )}
-                {(shop as any).repId && (
+                {/* Ẩn thông tin CMND/CCCD */}
+                {/* {(shop as any).repId && (
                   <div>
                     <span className="text-sm text-neutral-6">CMND/CCCD:</span>
                     <span className="ml-2 text-sm font-medium">{(shop as any).repId}</span>
                   </div>
-                )}
+                )} */}
               </div>
             </Card>
           )}
@@ -298,15 +299,16 @@ const ModalViewShop: React.FC<ModalViewShopProps> = ({
           )}
 
           {/* Documents */}
-          {((shop as any).idCardImages?.length > 0 ||
-            (shop as any).businessLicenseImages?.length > 0) && (
+          {/* Ẩn phần hiển thị ảnh CMND/CCCD, chỉ hiển thị Giấy phép kinh doanh */}
+          {(shop as any).businessLicenseImages?.length > 0 && (
             <Card className="p-4">
               <h4 className="flex gap-2 items-center mb-3 text-lg font-semibold">
                 <FileText className="w-5 h-5" />
                 Tài liệu
               </h4>
               <div className="space-y-3">
-                {(shop as any).idCardImages?.length > 0 && (
+                {/* Ẩn phần hiển thị ảnh CMND/CCCD */}
+                {/* {(shop as any).idCardImages?.length > 0 && (
                   <div>
                     <p className="mb-2 text-sm font-medium">CMND/CCCD:</p>
                     <div className="flex flex-wrap gap-2">
@@ -325,7 +327,7 @@ const ModalViewShop: React.FC<ModalViewShopProps> = ({
                       ))}
                     </div>
                   </div>
-                )}
+                )} */}
                 {(shop as any).businessLicenseImages?.length > 0 && (
                   <div>
                     <p className="mb-2 text-sm font-medium">Giấy phép kinh doanh:</p>
@@ -351,21 +353,23 @@ const ModalViewShop: React.FC<ModalViewShopProps> = ({
           )}
 
           {/* Policies */}
-          {((shop as any).shippingPolicy || (shop as any).returnPolicy) && (
+          {/* Ẩn shippingPolicy, chỉ hiển thị returnPolicy */}
+          {(shop as any).returnPolicy && (
             <Card className="p-4">
               <h4 className="flex gap-2 items-center mb-3 text-lg font-semibold">
                 <Clock className="w-5 h-5" />
                 Chính sách
               </h4>
               <div className="space-y-3">
-                {(shop as any).shippingPolicy && (
+                {/* Ẩn phần hiển thị shippingPolicy */}
+                {/* {(shop as any).shippingPolicy && (
                   <div>
                     <p className="mb-1 text-sm font-medium">Chính sách vận chuyển:</p>
                     <p className="text-sm whitespace-pre-wrap text-neutral-6">
                       {(shop as any).shippingPolicy}
                     </p>
                   </div>
-                )}
+                )} */}
                 {(shop as any).returnPolicy && (
                   <div>
                     <p className="mb-1 text-sm font-medium">Chính sách đổi trả:</p>

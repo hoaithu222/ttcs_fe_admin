@@ -33,6 +33,11 @@ export const selectSuspendShopStatus = createSelector(
   (shop) => shop.suspendShop.status
 );
 
+export const selectUnlockShopStatus = createSelector(
+  [shopState],
+  (shop) => shop.unlockShop.status
+);
+
 export const selectCreateShopError = createSelector([shopState], (shop) => shop.createShop.error);
 
 export const selectUpdateShopError = createSelector([shopState], (shop) => shop.updateShop.error);

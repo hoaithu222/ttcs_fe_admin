@@ -44,6 +44,11 @@ const initialState: ShopState = {
     error: null,
     message: null,
   },
+  unlockShop: {
+    status: ReduxStateType.INIT,
+    error: null,
+    message: null,
+  },
   filters: {
     search: "",
     status: undefined,
@@ -228,6 +233,30 @@ const shopSlice = createSlice({
       state.suspendShop.message = action.payload;
     },
 
+    unlockShopStart: (state, _action: PayloadAction<string>) => {
+      state.isLoading = true;
+      state.error = null;
+      state.unlockShop.status = ReduxStateType.LOADING;
+      state.unlockShop.error = null;
+      state.unlockShop.message = null;
+    },
+    unlockShopSuccess: (state, action: PayloadAction<Shop>) => {
+      state.isLoading = false;
+      state.unlockShop.status = ReduxStateType.SUCCESS;
+      state.unlockShop.error = null;
+      state.unlockShop.message = null;
+      const index = state.shops.findIndex((shop) => shop._id === action.payload._id);
+      if (index !== -1) {
+        state.shops[index] = action.payload;
+      }
+    },
+    unlockShopFailure: (state, action: PayloadAction<string>) => {
+      state.isLoading = false;
+      state.unlockShop.status = ReduxStateType.ERROR;
+      state.unlockShop.error = action.payload;
+      state.unlockShop.message = action.payload;
+    },
+
     setSelectedShop: (state, action: PayloadAction<Shop | null>) => {
       state.selectedShop = action.payload;
     },
@@ -257,6 +286,9 @@ const shopSlice = createSlice({
       state.suspendShop.status = ReduxStateType.INIT;
       state.suspendShop.error = null;
       state.suspendShop.message = null;
+      state.unlockShop.status = ReduxStateType.INIT;
+      state.unlockShop.error = null;
+      state.unlockShop.message = null;
     },
     resetCreateShop: (state) => {
       state.createShop.status = ReduxStateType.INIT;
@@ -288,6 +320,11 @@ const shopSlice = createSlice({
       state.suspendShop.error = null;
       state.suspendShop.message = null;
     },
+    resetUnlockShop: (state) => {
+      state.unlockShop.status = ReduxStateType.INIT;
+      state.unlockShop.error = null;
+      state.unlockShop.message = null;
+    },
   },
 });
 
@@ -313,6 +350,9 @@ export const {
   suspendShopStart,
   suspendShopSuccess,
   suspendShopFailure,
+  unlockShopStart,
+  unlockShopSuccess,
+  unlockShopFailure,
   setSelectedShop,
   clearError,
   resetState,
@@ -322,6 +362,7 @@ export const {
   resetApproveShop,
   resetRejectShop,
   resetSuspendShop,
+  resetUnlockShop,
 } = shopSlice.actions;
 
 export default shopSlice.reducer;

@@ -9,6 +9,7 @@ import type {
   approveShopStart,
   rejectShopStart,
   suspendShopStart,
+  unlockShopStart,
 } from "./Shop.slice";
 import {
   fetchShopsSuccess,
@@ -25,6 +26,8 @@ import {
   rejectShopFailure,
   suspendShopSuccess,
   suspendShopFailure,
+  unlockShopSuccess,
+  unlockShopFailure,
 } from "./Shop.slice";
 import type { ApiSuccess, Shop, ShopListResponse } from "@/core/api/shops/type";
 
@@ -35,6 +38,7 @@ type DeleteShopAction = ReturnType<typeof deleteShopStart>;
 type ApproveShopAction = ReturnType<typeof approveShopStart>;
 type RejectShopAction = ReturnType<typeof rejectShopStart>;
 type SuspendShopAction = ReturnType<typeof suspendShopStart>;
+type UnlockShopAction = ReturnType<typeof unlockShopStart>;
 
 // Helper function to extract error message from unknown error
 const getErrorMessage = (error: unknown, defaultMessage: string): string => {
@@ -245,6 +249,32 @@ function* suspendShopWorker(action: SuspendShopAction): Generator<unknown, void,
   }
 }
 
+function* unlockShopWorker(action: UnlockShopAction): Generator<unknown, void, ApiSuccess<Shop>> {
+  try {
+    const id = action.payload;
+    const response = yield call([shopsApi, shopsApi.unlockShop], id);
+
+    if (response.data) {
+      yield put(unlockShopSuccess(response.data));
+      yield put(
+        addToast({
+          type: "success",
+          message: "Shop unlocked successfully",
+        })
+      );
+    }
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error, "Failed to unlock shop");
+    yield put(unlockShopFailure(errorMessage));
+    yield put(
+      addToast({
+        type: "error",
+        message: errorMessage,
+      })
+    );
+  }
+}
+
 export function* shopSaga() {
   yield takeEvery("shop/fetchShopsStart", fetchShopsWorker);
   yield takeEvery("shop/createShopStart", createShopWorker);
@@ -253,4 +283,5 @@ export function* shopSaga() {
   yield takeEvery("shop/approveShopStart", approveShopWorker);
   yield takeEvery("shop/rejectShopStart", rejectShopWorker);
   yield takeEvery("shop/suspendShopStart", suspendShopWorker);
+  yield takeEvery("shop/unlockShopStart", unlockShopWorker);
 }

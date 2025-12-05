@@ -42,6 +42,12 @@ export interface ShopState {
     error: string | null;
     message: string | null;
   };
+  // trường hợp mở khóa
+  unlockShop: {
+    status: ReduxStateType;
+    error: string | null;
+    message: string | null;
+  };
   pagination: {
     page: number;
     limit: number;
@@ -106,5 +112,9 @@ export interface RejectShopPayload {
 }
 
 export interface SuspendShopPayload {
+  id: string;
+}
+
+export interface UnlockShopPayload {
   id: string;
 }

@@ -5,7 +5,7 @@ import PaginatedTable from "@/foundation/components/table/PaginatedTable";
 import Button from "@/foundation/components/buttons/Button";
 import Chip from "@/foundation/components/info/Chip";
 import Tooltip from "@/foundation/components/tooltip/Tooltip";
-import { CheckCircle2, XCircle, Ban, TrashIcon, Eye } from "lucide-react";
+import { CheckCircle2, XCircle, Ban, TrashIcon, Eye, Unlock } from "lucide-react";
 
 interface TableShopProps {
   data: Shop[];
@@ -15,6 +15,7 @@ interface TableShopProps {
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
   onSuspend?: (id: string) => void;
+  onUnlock?: (id: string) => void;
   onDelete?: (id: string) => void;
   page?: number;
   totalPages?: number;
@@ -30,6 +31,7 @@ const TableShop: React.FC<TableShopProps> = ({
   onApprove,
   onReject,
   onSuspend,
+  onUnlock,
   onDelete,
   page = 1,
   totalPages = 1,
@@ -262,6 +264,23 @@ const TableShop: React.FC<TableShopProps> = ({
                     onSuspend?.(shop._id);
                   }}
                   testId="suspend-shop-btn"
+                />
+              </Tooltip>
+            )}
+
+            {/* Mở khóa - chỉ hiển thị khi blocked */}
+            {status === "blocked" && (
+              <Tooltip content="Mở khóa cửa hàng" side="top" delayDuration={100}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="transition-colors duration-200 text-success hover:bg-success/10"
+                  icon={<Unlock className="w-4 h-4" />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnlock?.(shop._id);
+                  }}
+                  testId="unlock-shop-btn"
                 />
               </Tooltip>
             )}
