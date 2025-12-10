@@ -140,7 +140,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         const transaction = info.row.original;
         return (
           <span className="font-mono text-xs text-neutral-7">
-            {transaction._id.substring(0, 8)}...
+            {transaction._id}
           </span>
         );
       },
@@ -221,7 +221,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       },
       size: 160,
     },
-    {
+  ];
+
+  if (onView || onUpdateStatus || onTestWebhook) {
+    columns.push({
       id: "actions",
       header: "Thao tác",
       cell: (info) => {
@@ -267,8 +270,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         align: "text-center",
       },
       size: 400,
-    },
-  ];
+    });
+  }
 
   return (
     <PaginatedTable

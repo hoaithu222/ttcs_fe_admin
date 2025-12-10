@@ -19,6 +19,20 @@ export interface UserStatistics {
   usersByStatus: Record<string, number>;
   growthRate: number;
   monthlyGrowth: number;
+  activeRate?: number;
+  inactiveUsers?: number;
+}
+
+export interface TopSellingProduct {
+  productId: string;
+  productName: string;
+  salesCount: number;
+  imageUrl?: string;
+  category?: string;
+  price?: number;
+  revenue?: number;
+  stockLeft?: number;
+  rating?: number;
 }
 
 export interface ProductStatistics {
@@ -28,11 +42,7 @@ export interface ProductStatistics {
   productsByShop: Record<string, number>;
   lowStockProducts: number;
   outOfStockProducts: number;
-  topSellingProducts: Array<{
-    productId: string;
-    productName: string;
-    salesCount: number;
-  }>;
+  topSellingProducts: TopSellingProduct[];
 }
 
 export interface SystemConfig {
