@@ -32,6 +32,7 @@ export interface PendingTransactionsQuery {
   page?: number;
   limit?: number;
   type?: WalletTransaction["type"];
+  status?: WalletTransaction["status"] | "all";
 }
 
 export interface TestWebhookRequest {

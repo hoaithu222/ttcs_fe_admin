@@ -168,7 +168,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         const transaction = info.row.original;
         return (
           <span className="font-semibold text-primary-6">
-            {formatPrice(transaction.amount)}
+            {formatPrice(transaction.metadata?.originalAmount)}
           </span>
         );
       },

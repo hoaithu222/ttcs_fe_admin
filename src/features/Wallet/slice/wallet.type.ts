@@ -31,6 +31,7 @@ export interface FetchPendingTransactionsPayload {
   page?: number;
   limit?: number;
   type?: WalletTransaction["type"];
+  status?: WalletTransaction["status"] | "all";
 }
 
 export interface UpdateTransactionStatusPayload {

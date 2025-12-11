@@ -24,6 +24,7 @@ export const useWalletActions = () => {
       page?: number;
       limit?: number;
       type?: WalletTransaction["type"];
+      status?: WalletTransaction["status"] | "all";
     }) => {
       dispatch(fetchPendingTransactionsStart(payload));
     },
