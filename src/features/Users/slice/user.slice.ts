@@ -34,6 +34,11 @@ const initialState: UserState = {
     error: null,
     message: null,
   },
+  unlockUser: {
+    status: ReduxStateType.INIT,
+    error: null,
+    message: null,
+  },
   filters: {
     search: "",
     status: undefined,
@@ -168,6 +173,30 @@ const userSlice = createSlice({
       state.suspendUser.message = action.payload;
     },
 
+    unlockUserStart: (state, _action: PayloadAction<string>) => {
+      state.isLoading = true;
+      state.error = null;
+      state.unlockUser.status = ReduxStateType.LOADING;
+      state.unlockUser.error = null;
+      state.unlockUser.message = null;
+    },
+    unlockUserSuccess: (state, action: PayloadAction<User>) => {
+      state.isLoading = false;
+      state.unlockUser.status = ReduxStateType.SUCCESS;
+      state.unlockUser.error = null;
+      state.unlockUser.message = null;
+      const index = state.users.findIndex((user) => user._id === action.payload._id);
+      if (index !== -1) {
+        state.users[index] = action.payload;
+      }
+    },
+    unlockUserFailure: (state, action: PayloadAction<string>) => {
+      state.isLoading = false;
+      state.unlockUser.status = ReduxStateType.ERROR;
+      state.unlockUser.error = action.payload;
+      state.unlockUser.message = action.payload;
+    },
+
     setSelectedUser: (state, action: PayloadAction<User | null>) => {
       state.selectedUser = action.payload;
     },
@@ -212,6 +241,11 @@ const userSlice = createSlice({
       state.suspendUser.error = null;
       state.suspendUser.message = null;
     },
+    resetUnlockUser: (state) => {
+      state.unlockUser.status = ReduxStateType.INIT;
+      state.unlockUser.error = null;
+      state.unlockUser.message = null;
+    },
   },
 });
 
@@ -231,6 +265,9 @@ export const {
   suspendUserStart,
   suspendUserSuccess,
   suspendUserFailure,
+  unlockUserStart,
+  unlockUserSuccess,
+  unlockUserFailure,
   setSelectedUser,
   clearError,
   resetState,
@@ -238,6 +275,7 @@ export const {
   resetUpdateUser,
   resetDeleteUser,
   resetSuspendUser,
+  resetUnlockUser,
 } = userSlice.actions;
 
 export default userSlice.reducer;

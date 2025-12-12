@@ -33,3 +33,10 @@ export const selectSuspendUserStatus = createSelector(
 );
 
 export const selectSuspendUserError = createSelector([userState], (user) => user.suspendUser.error);
+
+export const selectUnlockUserStatus = createSelector(
+  [userState],
+  (user) => user.unlockUser.status
+);
+
+export const selectUnlockUserError = createSelector([userState], (user) => user.unlockUser.error);

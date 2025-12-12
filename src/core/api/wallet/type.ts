@@ -1,7 +1,13 @@
 // Wallet Transaction types
 export interface WalletTransaction {
   _id: string;
-  userId?: string;
+  userId?: string | {
+    _id: string;
+    name?: string;
+    email?: string;
+    avatar?: string;
+    phone?: string;
+  };
   shopId?: string;
   type: "deposit" | "withdraw" | "payment" | "refund" | "transfer";
   amount: number;

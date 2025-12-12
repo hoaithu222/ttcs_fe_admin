@@ -7,6 +7,7 @@ import type {
   updateUserStart,
   deleteUserStart,
   suspendUserStart,
+  unlockUserStart,
 } from "./user.slice";
 import {
   fetchUsersSuccess,
@@ -19,6 +20,8 @@ import {
   deleteUserFailure,
   suspendUserSuccess,
   suspendUserFailure,
+  unlockUserSuccess,
+  unlockUserFailure,
 } from "./user.slice";
 import type { ApiSuccess, User, UserListResponse } from "@/core/api/users/type";
 
@@ -27,6 +30,7 @@ type CreateUserAction = ReturnType<typeof createUserStart>;
 type UpdateUserAction = ReturnType<typeof updateUserStart>;
 type DeleteUserAction = ReturnType<typeof deleteUserStart>;
 type SuspendUserAction = ReturnType<typeof suspendUserStart>;
+type UnlockUserAction = ReturnType<typeof unlockUserStart>;
 
 // Helper function to extract error message from unknown error
 const getErrorMessage = (error: unknown, defaultMessage: string): string => {
@@ -180,14 +184,14 @@ function* deleteUserWorker(action: DeleteUserAction): Generator<unknown, void, A
 function* suspendUserWorker(action: SuspendUserAction): Generator<unknown, void, ApiSuccess<User>> {
   try {
     const id = action.payload;
-    const response = yield call([usersApi, usersApi.updateUser], id, { status: "suspended" });
+    const response = yield call([usersApi, usersApi.suspendUser], id);
 
     if (response.data) {
       yield put(suspendUserSuccess(response.data));
       yield put(
         addToast({
           type: "success",
-          message: "User suspended successfully",
+          message: "Đã khóa người dùng thành công",
         })
       );
     }
@@ -203,10 +207,37 @@ function* suspendUserWorker(action: SuspendUserAction): Generator<unknown, void,
   }
 }
 
+function* unlockUserWorker(action: UnlockUserAction): Generator<unknown, void, ApiSuccess<User>> {
+  try {
+    const id = action.payload;
+    const response = yield call([usersApi, usersApi.unlockUser], id);
+
+    if (response.data) {
+      yield put(unlockUserSuccess(response.data));
+      yield put(
+        addToast({
+          type: "success",
+          message: "Đã mở khóa người dùng thành công",
+        })
+      );
+    }
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error, "Failed to unlock user");
+    yield put(unlockUserFailure(errorMessage));
+    yield put(
+      addToast({
+        type: "error",
+        message: errorMessage,
+      })
+    );
+  }
+}
+
 export function* userSaga() {
   yield takeEvery("user/fetchUsersStart", fetchUsersWorker);
   yield takeEvery("user/createUserStart", createUserWorker);
   yield takeEvery("user/updateUserStart", updateUserWorker);
   yield takeEvery("user/deleteUserStart", deleteUserWorker);
   yield takeEvery("user/suspendUserStart", suspendUserWorker);
+  yield takeEvery("user/unlockUserStart", unlockUserWorker);
 }

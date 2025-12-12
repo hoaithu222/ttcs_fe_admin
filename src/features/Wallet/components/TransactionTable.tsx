@@ -4,7 +4,7 @@ import { WalletTransaction } from "@/core/api/wallet/type";
 import PaginatedTable from "@/foundation/components/table/PaginatedTable";
 import Button from "@/foundation/components/buttons/Button";
 import Chip from "@/foundation/components/info/Chip";
-import { CheckCircle2, XCircle, Clock, Eye, TestTube } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Eye, TestTube, AlertCircle, User } from "lucide-react";
 
 interface TransactionTableProps {
   data: WalletTransaction[];
@@ -31,7 +31,31 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   totalItems,
   itemsPerPage = 10,
 }) => {
-  const getStatusChip = (status: string) => {
+  // Calculate remaining time for pending deposits (30 minutes expiry)
+  const getRemainingTime = (createdAt: string): { minutes: number; isExpiringSoon: boolean; isExpired: boolean } | null => {
+    const created = new Date(createdAt);
+    const now = new Date();
+    const elapsed = now.getTime() - created.getTime();
+    const elapsedMinutes = Math.floor(elapsed / (1000 * 60));
+    const remainingMinutes = 30 - elapsedMinutes;
+    
+    // Nếu đã quá 30 phút
+    if (remainingMinutes <= 0) {
+      return {
+        minutes: 0,
+        isExpiringSoon: true,
+        isExpired: true,
+      };
+    }
+    
+    return {
+      minutes: remainingMinutes,
+      isExpiringSoon: remainingMinutes <= 5, // Cảnh báo khi còn <= 5 phút
+      isExpired: false,
+    };
+  };
+
+  const getStatusChip = (status: string, createdAt?: string, type?: string) => {
     switch (status) {
       case "completed":
         return (
@@ -48,18 +72,38 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </Chip>
         );
       case "pending":
+        const remainingTime = createdAt && type === "deposit" ? getRemainingTime(createdAt) : null;
+        const isExpiringSoon = remainingTime?.isExpiringSoon || false;
+        const isExpired = remainingTime?.isExpired || false;
+        
         return (
-          <Chip
-            colorClass="bg-warning text-white border-none"
-            className="shadow-sm transition-all duration-200 hover:shadow-md"
-            rounded="full"
-            size="sm"
-          >
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-3 h-3" />
-              <span>Đang chờ</span>
-            </span>
-          </Chip>
+          <div className="flex flex-col items-center gap-1">
+            <Chip
+              colorClass={isExpired ? "bg-error text-white border-none" : isExpiringSoon ? "bg-error text-white border-none" : "bg-warning text-white border-none"}
+              className="shadow-sm transition-all duration-200 hover:shadow-md"
+              rounded="full"
+              size="sm"
+            >
+              <span className="flex items-center gap-1.5">
+                {isExpired || isExpiringSoon ? (
+                  <AlertCircle className="w-3 h-3" />
+                ) : (
+                  <Clock className="w-3 h-3" />
+                )}
+                <span>{isExpired ? "Đã hết hạn" : "Đang chờ"}</span>
+              </span>
+            </Chip>
+            {remainingTime && !isExpired && (
+              <span className={`text-xs font-medium ${isExpiringSoon ? "text-error" : "text-warning"}`}>
+                Còn {remainingTime.minutes} phút
+              </span>
+            )}
+            {/* {isExpired && (
+              <span className="text-xs font-medium text-error">
+                Sẽ tự động hủy
+              </span>
+            )} */}
+          </div>
         );
       case "failed":
         return (
@@ -131,6 +175,45 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     });
   };
 
+  const getUserDisplay = (userId: WalletTransaction["userId"]) => {
+    if (!userId) return null;
+    
+    if (typeof userId === "string") {
+      return (
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-2">
+            <User className="w-4 h-4 text-neutral-6" />
+          </div>
+          <span className="text-xs font-mono text-neutral-6">{userId.slice(-8)}</span>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex items-center gap-2">
+        {userId.avatar ? (
+          <img
+            src={userId.avatar}
+            alt={userId.name || "User"}
+            className="w-8 h-8 rounded-full object-cover border border-border-1"
+          />
+        ) : (
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-1">
+            <User className="w-4 h-4 text-primary-6" />
+          </div>
+        )}
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-medium text-neutral-9 truncate">
+            {userId.name || "Người dùng"}
+          </span>
+          {userId.email && (
+            <span className="text-xs text-neutral-6 truncate">{userId.email}</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const columns: ColumnWithSummary<WalletTransaction>[] = [
     {
       id: "_id",
@@ -140,11 +223,23 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         const transaction = info.row.original;
         return (
           <span className="font-mono text-xs text-neutral-7">
-            {transaction._id}
+            {transaction._id.slice(-8)}
           </span>
         );
       },
-      size: 200,
+      size: 150,
+    },
+    {
+      id: "user",
+      header: "Người dùng",
+      accessorKey: "userId",
+      cell: (info) => {
+        const transaction = info.row.original;
+        return getUserDisplay(transaction.userId) || (
+          <span className="text-sm text-neutral-5">-</span>
+        );
+      },
+      size: 220,
     },
     {
       id: "type",
@@ -180,7 +275,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       accessorKey: "status",
       cell: (info) => {
         const transaction = info.row.original;
-        return getStatusChip(transaction.status);
+        return getStatusChip(transaction.status, transaction.createdAt, transaction.type);
       },
       size: 200,
       meta: {
@@ -283,6 +378,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       totalPages={totalPages}
       totalItems={totalItems}
       itemsPerPage={itemsPerPage}
+      showIndex
+      showPagination
+      containerClassName="bg-background-1 border border-divider-1 rounded-lg shadow-sm overflow-x-auto"
+      tableClassName="min-w-full"
+      headerClassName="bg-gradient-to-r from-neutral-1 to-neutral-2 border-b border-divider-1"
+      rowClassName="border-b border-divider-1 hover:bg-cell-header transition-colors duration-150"
+      hideScrollbarX={false}
+      testId="transaction-table"
     />
   );
 };

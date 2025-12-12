@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useAppSelector } from "@/app/store";
 import {
   selectTransactions,
@@ -18,9 +18,26 @@ const WalletPage: React.FC = () => {
   const pagination = useAppSelector(selectWalletPagination);
   const filters = useAppSelector(selectWalletFilters);
   const { fetchPendingTransactions } = useWalletActions();
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchPendingTransactions({ page: 1, limit: 10, status: "all" });
+    
+    // Auto-refresh every 2 minutes to check for expired pending transactions
+    refreshIntervalRef.current = setInterval(() => {
+      fetchPendingTransactions({
+        page: pagination?.page ?? 1,
+        limit: pagination?.limit ?? 10,
+        type: filters.type,
+        status: "all",
+      });
+    }, 2 * 60 * 1000); // 2 minutes
+
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -66,7 +83,7 @@ const WalletPage: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="mt-4">
+      <div className="mt-4 h-[calc(100vh - 300px)] overflow-y-auto">
         <TransactionTable
           data={Array.isArray(transactions) ? transactions : []}
           isLoading={Boolean(isLoading)}

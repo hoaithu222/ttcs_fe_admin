@@ -15,21 +15,23 @@ import Select from "@/foundation/components/input/Select";
 import Button from "@/foundation/components/buttons/Button";
 import * as Form from "@radix-ui/react-form";
 import { User } from "@/core/api/users/type";
+import { UserCog, Mail, User as UserIcon, Shield } from "lucide-react";
 
 const UsersPage: React.FC = () => {
   const users = useAppSelector(selectUsers);
   const isLoading = useAppSelector(selectUserLoading);
   const pagination = useAppSelector(selectUserPagination);
   const filters = useAppSelector(selectUserFilters);
-  const { fetchUsers, deleteUser, suspendUser, updateUserRole } = useUserActions();
+  const { fetchUsers, deleteUser, suspendUser, unlockUser, updateUserRole } = useUserActions();
 
   const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
   const [isConfirmSuspendModalOpen, setIsConfirmSuspendModalOpen] = useState(false);
+  const [isConfirmUnlockModalOpen, setIsConfirmUnlockModalOpen] = useState(false);
   const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
-  const [pendingAction, setPendingAction] = useState<"delete" | "suspend" | null>(null);
+  const [pendingAction, setPendingAction] = useState<"delete" | "suspend" | "unlock" | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
 
   useEffect(() => {
@@ -59,6 +61,12 @@ const UsersPage: React.FC = () => {
     setIsConfirmSuspendModalOpen(true);
   };
 
+  const handleRequestUnlock = (id: string) => {
+    setPendingActionId(id);
+    setPendingAction("unlock");
+    setIsConfirmUnlockModalOpen(true);
+  };
+
   const handleRequestEditRole = (user: User) => {
     setSelectedUser(user);
     setSelectedRole(user.role);
@@ -82,6 +90,10 @@ const UsersPage: React.FC = () => {
         suspendUser(pendingActionId);
         setIsConfirmSuspendModalOpen(false);
         break;
+      case "unlock":
+        unlockUser(pendingActionId);
+        setIsConfirmUnlockModalOpen(false);
+        break;
     }
 
     setPendingActionId(null);
@@ -102,6 +114,7 @@ const UsersPage: React.FC = () => {
   const handleCancelAction = () => {
     setIsConfirmDeleteModalOpen(false);
     setIsConfirmSuspendModalOpen(false);
+    setIsConfirmUnlockModalOpen(false);
     setPendingActionId(null);
     setPendingAction(null);
   };
@@ -146,6 +159,7 @@ const UsersPage: React.FC = () => {
           onView={handleViewUser}
           onDelete={handleRequestDelete}
           onSuspend={handleRequestSuspend}
+          onUnlock={handleRequestUnlock}
           onEditRole={handleRequestEditRole}
           page={pagination?.page ?? 1}
           totalPages={pagination?.totalPages ?? 1}
@@ -190,6 +204,24 @@ const UsersPage: React.FC = () => {
         onCancel={handleCancelAction}
       />
 
+      {/* Unlock Modal */}
+      <ConfirmModal
+        open={isConfirmUnlockModalOpen}
+        onOpenChange={setIsConfirmUnlockModalOpen}
+        title="Xác nhận mở khóa người dùng"
+        content="Bạn có chắc chắn muốn mở khóa người dùng này? Người dùng sẽ có thể đăng nhập lại sau khi được mở khóa."
+        confirmText="Mở khóa"
+        cancelText="Hủy"
+        iconType="success"
+        decorClasses={{
+          container: "bg-background-1",
+          border: "border-success",
+          glow: "shadow-[0_0_0_6px_rgba(45,208,132,0.08)]",
+        }}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
+      />
+
       {/* Edit Role Modal */}
       <Modal
         open={isEditRoleModalOpen}
@@ -200,33 +232,66 @@ const UsersPage: React.FC = () => {
             setSelectedRole("");
           }
         }}
-        size="xl"
-        title="Chỉnh sửa quyền người dùng"
+        size="md"
+        title={
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-1">
+              <UserCog className="w-5 h-5 text-primary-6" />
+            </div>
+            <span className="text-xl font-semibold text-neutral-10">Chỉnh sửa quyền người dùng</span>
+          </div>
+        }
+        padding="p-6"
       >
         <Form.Root>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {selectedUser && (
               <>
-                <div>
-                  <p className="mb-2 text-sm text-neutral-6">Người dùng:</p>
-                  <p className="font-medium text-neutral-10">{selectedUser.name}</p>
-                  <p className="text-sm text-neutral-7">{selectedUser.email}</p>
+                {/* User Info Card */}
+                <div className="rounded-xl border border-border-1 bg-background-1 p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary-1 border border-primary-3">
+                      <UserIcon className="w-6 h-6 text-primary-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="mb-1 text-xs font-medium text-neutral-6 uppercase tracking-wide">
+                        Người dùng
+                      </p>
+                      <p className="mb-2 text-base font-semibold text-neutral-10 truncate">
+                        {selectedUser.name}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-neutral-5 flex-shrink-0" />
+                        <p className="text-sm text-neutral-7 truncate">{selectedUser.email}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-neutral-10">Vai trò</label>
+
+                {/* Role Selection */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-neutral-10">
+                    <Shield className="w-4 h-4 text-primary-6" />
+                    Vai trò
+                  </label>
                   <Select
                     name="role"
                     value={selectedRole}
                     onChange={setSelectedRole}
                     options={[
                       { value: "user", label: "Người dùng" },
-                      { value: "moderator", label: "Điều hành viên" },
+                      // { value: "moderator", label: "Điều hành viên" },
                       { value: "admin", label: "Quản trị viên" },
                     ]}
                     sizeSelect="md"
                   />
+                  <p className="text-xs text-neutral-6 mt-1">
+                    Vai trò hiện tại: <span className="font-medium text-neutral-8">{selectedUser.role === "admin" ? "Quản trị viên" : "Người dùng"}</span>
+                  </p>
                 </div>
-                <div className="flex gap-2 justify-end pt-4">
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 justify-end pt-4 border-t border-border-1">
                   <Button
                     variant="outlined"
                     onClick={() => {
@@ -234,10 +299,16 @@ const UsersPage: React.FC = () => {
                       setSelectedUser(null);
                       setSelectedRole("");
                     }}
+                    className="min-w-[100px]"
                   >
                     Hủy
                   </Button>
-                  <Button onClick={handleConfirmEditRole}>Lưu thay đổi</Button>
+                  <Button 
+                    onClick={handleConfirmEditRole}
+                    className="min-w-[140px]"
+                  >
+                    Lưu thay đổi
+                  </Button>
                 </div>
               </>
             )}

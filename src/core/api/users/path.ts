@@ -5,6 +5,8 @@ export const USERS_ENDPOINTS = {
   UPDATE: "/users/users/:id",
   UPDATE_PARTIAL: "/users/users/update/:id",
   DELETE: "/users/users/:id",
+  SUSPEND: "/users/users/:id/suspend",
+  UNLOCK: "/users/users/:id/unlock",
   SECURITY: "/users/me/security",
   ENABLE_2FA: "/users/me/2fa/enable",
   VERIFY_2FA: "/users/me/2fa/verify",

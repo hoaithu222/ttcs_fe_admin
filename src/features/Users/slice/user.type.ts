@@ -30,6 +30,12 @@ export interface UserState {
     error: string | null;
     message: string | null;
   };
+  // trường hợp mở khóa
+  unlockUser: {
+    status: ReduxStateType;
+    error: string | null;
+    message: string | null;
+  };
   pagination: {
     page: number;
     limit: number;
@@ -80,6 +86,10 @@ export interface DeleteUserPayload {
 }
 
 export interface SuspendUserPayload {
+  id: string;
+}
+
+export interface UnlockUserPayload {
   id: string;
 }
 

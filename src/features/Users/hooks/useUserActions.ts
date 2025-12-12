@@ -4,6 +4,7 @@ import {
   fetchUsersStart,
   deleteUserStart,
   suspendUserStart,
+  unlockUserStart,
   updateUserStart,
   setSelectedUser,
 } from "../slice/user.slice";
@@ -13,6 +14,7 @@ import {
   selectUpdateUserStatus,
   selectDeleteUserStatus,
   selectSuspendUserStatus,
+  selectUnlockUserStatus,
 } from "../slice/user.selector";
 import { useSelector } from "react-redux";
 import { ReduxStateType } from "@/app/store/types";
@@ -23,6 +25,7 @@ export const useUserActions = () => {
   const updateUserStatus = useSelector(selectUpdateUserStatus);
   const deleteUserStatus = useSelector(selectDeleteUserStatus);
   const suspendUserStatus = useSelector(selectSuspendUserStatus);
+  const unlockUserStatus = useSelector(selectUnlockUserStatus);
 
   const fetchUsers = useCallback(
     (payload: {
@@ -39,13 +42,14 @@ export const useUserActions = () => {
     [dispatch]
   );
 
-  // lắng nghe khi thành công thêm/sửa/xóa/khóa user thì sẽ fetch lại danh sách
+  // lắng nghe khi thành công thêm/sửa/xóa/khóa/mở khóa user thì sẽ fetch lại danh sách
   useEffect(() => {
     if (
       createUserStatus === ReduxStateType.SUCCESS ||
       updateUserStatus === ReduxStateType.SUCCESS ||
       deleteUserStatus === ReduxStateType.SUCCESS ||
-      suspendUserStatus === ReduxStateType.SUCCESS
+      suspendUserStatus === ReduxStateType.SUCCESS ||
+      unlockUserStatus === ReduxStateType.SUCCESS
     ) {
       dispatch(fetchUsersStart({ page: 1, limit: 10 }));
     }
@@ -54,6 +58,7 @@ export const useUserActions = () => {
     updateUserStatus,
     deleteUserStatus,
     suspendUserStatus,
+    unlockUserStatus,
     dispatch,
   ]);
 
@@ -67,6 +72,13 @@ export const useUserActions = () => {
   const suspendUser = useCallback(
     (id: string) => {
       dispatch(suspendUserStart(id));
+    },
+    [dispatch]
+  );
+
+  const unlockUser = useCallback(
+    (id: string) => {
+      dispatch(unlockUserStart(id));
     },
     [dispatch]
   );
@@ -89,6 +101,7 @@ export const useUserActions = () => {
     fetchUsers,
     deleteUser,
     suspendUser,
+    unlockUser,
     updateUserRole,
     selectUser,
   };

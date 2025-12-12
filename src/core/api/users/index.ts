@@ -54,6 +54,20 @@ class UsersApiService extends VpsHttpClient {
     return response.data;
   }
 
+  // Suspend user (admin only)
+  async suspendUser(id: string): Promise<ApiSuccess<User>> {
+    const endpoint = buildEndpoint(USERS_ENDPOINTS.SUSPEND, { id });
+    const response = await this.post(endpoint);
+    return response.data;
+  }
+
+  // Unlock user (admin only)
+  async unlockUser(id: string): Promise<ApiSuccess<User>> {
+    const endpoint = buildEndpoint(USERS_ENDPOINTS.UNLOCK, { id });
+    const response = await this.post(endpoint);
+    return response.data;
+  }
+
   // Get user security info
   async getUserSecurity(): Promise<ApiSuccess<UserSecurity>> {
     const response = await this.get(USERS_ENDPOINTS.SECURITY);

@@ -5,7 +5,7 @@ import PaginatedTable from "@/foundation/components/table/PaginatedTable";
 import Button from "@/foundation/components/buttons/Button";
 import Chip from "@/foundation/components/info/Chip";
 import Tooltip from "@/foundation/components/tooltip/Tooltip";
-import { TrashIcon, Eye, Ban, Edit } from "lucide-react";
+import { TrashIcon, Eye, Ban, Edit, Unlock } from "lucide-react";
 
 interface UserTableProps {
   data: User[];
@@ -14,6 +14,7 @@ interface UserTableProps {
   onView?: (user: User) => void;
   onDelete?: (id: string) => void;
   onSuspend?: (id: string) => void;
+  onUnlock?: (id: string) => void;
   onEditRole?: (user: User) => void;
   page?: number;
   totalPages?: number;
@@ -28,6 +29,7 @@ const UserTable: React.FC<UserTableProps> = ({
   onView,
   onDelete,
   onSuspend,
+  onUnlock,
   onEditRole,
   page = 1,
   totalPages = 1,
@@ -261,7 +263,7 @@ const UserTable: React.FC<UserTableProps> = ({
         return (
           <div className="flex flex-wrap gap-1 justify-center">
             {/* Xem chi tiết */}
-            <Tooltip content="Xem chi tiết" side="top" delayDuration={100}>
+            {/* <Tooltip content="Xem chi tiết" side="top" delayDuration={100}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -273,7 +275,7 @@ const UserTable: React.FC<UserTableProps> = ({
                 }}
                 testId="view-user-btn"
               />
-            </Tooltip>
+            </Tooltip> */}
 
             {/* Chỉnh sửa quyền */}
             <Tooltip content="Chỉnh sửa quyền" side="top" delayDuration={100}>
@@ -303,6 +305,23 @@ const UserTable: React.FC<UserTableProps> = ({
                     onSuspend?.(user._id);
                   }}
                   testId="suspend-user-btn"
+                />
+              </Tooltip>
+            )}
+
+            {/* Mở khóa - chỉ hiển thị khi suspended */}
+            {status === "suspended" && (
+              <Tooltip content="Mở khóa người dùng" side="top" delayDuration={100}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="transition-colors duration-200 text-success hover:bg-success/10"
+                  icon={<Unlock className="w-4 h-4" />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnlock?.(user._id);
+                  }}
+                  testId="unlock-user-btn"
                 />
               </Tooltip>
             )}
