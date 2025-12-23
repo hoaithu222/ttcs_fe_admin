@@ -52,6 +52,13 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, description }) => 
   </div>
 );
 
+// Helper function to format image URL from Cloudinary
+const formatImageUrl = (url: string | undefined): string => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `https://res.cloudinary.com/dor0kslle/image/upload/${url}`;
+};
+
 const AnalyticsPage: React.FC = () => {
   const adminRevenue = useAppSelector(selectAdminRevenue);
   const revenueTimeSeries = useAppSelector(selectRevenueTimeSeries);
@@ -194,6 +201,7 @@ const AnalyticsPage: React.FC = () => {
     fetchAnalyticsData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   return (
     <ScrollView
@@ -391,33 +399,74 @@ const AnalyticsPage: React.FC = () => {
                       maxProductRevenue > 0
                         ? Math.round(((product.revenue || 0) / maxProductRevenue) * 100)
                         : 0;
+                    const productImageUrl = formatImageUrl(product.productImage);
                     return (
                       <div
                         key={product.productId}
-                        className="rounded-2xl border border-neutral-3/60 bg-neutral-1/60 p-4 dark:border-neutral-8/60 dark:bg-neutral-9/40"
+                        className="group relative overflow-hidden rounded-2xl border border-neutral-3/60 bg-gradient-to-r from-neutral-1/60 to-neutral-2/40 p-4 transition-all duration-300 hover:border-primary-5/50 hover:shadow-lg dark:border-neutral-8/60 dark:from-neutral-9/40 dark:to-neutral-8/30"
                       >
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-semibold text-neutral-6">
+                        <div className="flex items-center gap-4">
+                          {/* Rank Badge */}
+                          <div className="flex-shrink-0">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-6 to-primary-7 text-lg font-bold text-white shadow-md">
                               #{index + 1}
-                            </span>
-                            <div>
-                              <p className="font-semibold text-neutral-10">{product.productName}</p>
-                              <p className="text-sm text-neutral-6">
-                                Đã bán: {product.quantitySold} • Doanh thu:{" "}
-                                {product.revenue.toLocaleString("vi-VN")} đ
-                              </p>
                             </div>
                           </div>
-                          <span className="rounded-full bg-primary-6/10 px-3 py-1 text-xs font-semibold text-primary-7">
-                            #{product.rank}
-                          </span>
-                        </div>
-                        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-3 dark:bg-neutral-8">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-primary-5 to-primary-7"
-                            style={{ width: `${widthPercent}%` }}
-                          />
+
+                          {/* Product Image */}
+                          <div className="flex-shrink-0">
+                            <div className="relative h-16 w-16 overflow-hidden rounded-xl border-2 border-neutral-3/40 bg-neutral-2 dark:border-neutral-8/40 dark:bg-neutral-8">
+                              {productImageUrl ? (
+                                <img
+                                  src={productImageUrl}
+                                  alt={product.productName}
+                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = "none";
+                                    const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = "flex";
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-3 to-neutral-4 text-neutral-7 dark:from-neutral-8 dark:to-neutral-9 dark:text-neutral-5 ${productImageUrl ? "hidden" : "flex"}`}
+                              >
+                                <Package className="h-6 w-6" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Product Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="truncate text-base font-bold text-neutral-10 group-hover:text-primary-7 transition-colors">
+                                  {product.productName}
+                                </h3>
+                                <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-neutral-6">
+                                  <span className="flex items-center gap-1">
+                                    <Package className="h-3.5 w-3.5" />
+                                    {product.quantitySold.toLocaleString("vi-VN")} sản phẩm
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <DollarSign className="h-3.5 w-3.5" />
+                                    {product.revenue.toLocaleString("vi-VN")} đ
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="flex-shrink-0 rounded-full bg-primary-6/10 px-3 py-1 text-xs font-semibold text-primary-7">
+                                Rank #{product.rank}
+                              </span>
+                            </div>
+                            
+                            {/* Progress Bar */}
+                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-3/60 dark:bg-neutral-8/60">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-primary-5 via-primary-6 to-primary-7 transition-all duration-500"
+                                style={{ width: `${widthPercent}%` }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -444,33 +493,81 @@ const AnalyticsPage: React.FC = () => {
                       maxShopRevenue > 0
                         ? Math.round(((shop.totalRevenue || 0) / maxShopRevenue) * 100)
                         : 0;
+                    const shopLogoUrl = formatImageUrl(shop.shopLogo);
+                    const aov = shop.averageOrderValue || (shop.totalOrders > 0 ? Math.round(shop.totalRevenue / shop.totalOrders) : 0);
                     return (
                       <div
                         key={shop.shopId}
-                        className="rounded-2xl border border-neutral-3/60 bg-neutral-1/60 p-4 dark:border-neutral-8/60 dark:bg-neutral-9/40"
+                        className="group relative overflow-hidden rounded-2xl border border-neutral-3/60 bg-gradient-to-r from-neutral-1/60 to-neutral-2/40 p-4 transition-all duration-300 hover:border-primary-5/50 hover:shadow-lg dark:border-neutral-8/60 dark:from-neutral-9/40 dark:to-neutral-8/30"
                       >
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-semibold text-neutral-6">
+                        <div className="flex items-center gap-4">
+                          {/* Rank Badge */}
+                          <div className="flex-shrink-0">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-lg font-bold text-white shadow-md">
                               #{index + 1}
-                            </span>
-                            <div>
-                              <p className="font-semibold text-neutral-10">{shop.shopName}</p>
-                              <p className="text-sm text-neutral-6">
-                                Doanh thu: {shop.totalRevenue.toLocaleString("vi-VN")} đ • Đơn hàng:{" "}
-                                {shop.totalOrders}
-                              </p>
                             </div>
                           </div>
-                          <span className="rounded-full bg-neutral-2 px-3 py-1 text-xs font-semibold text-neutral-7 dark:bg-neutral-8 dark:text-neutral-2">
-                            #{shop.rank}
-                          </span>
-                        </div>
-                        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-3 dark:bg-neutral-8">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-primary-3 via-primary-5 to-primary-7"
-                            style={{ width: `${widthPercent}%` }}
-                          />
+
+                          {/* Shop Logo */}
+                          <div className="flex-shrink-0">
+                            <div className="relative h-16 w-16 overflow-hidden rounded-xl border-2 border-neutral-3/40 bg-neutral-2 dark:border-neutral-8/40 dark:bg-neutral-8">
+                              {shopLogoUrl ? (
+                                <img
+                                  src={shopLogoUrl}
+                                  alt={shop.shopName}
+                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = "none";
+                                    const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = "flex";
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-3 to-neutral-4 text-neutral-7 dark:from-neutral-8 dark:to-neutral-9 dark:text-neutral-5 ${shopLogoUrl ? "hidden" : "flex"}`}
+                              >
+                                <ShoppingBag className="h-6 w-6" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Shop Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="truncate text-base font-bold text-neutral-10 group-hover:text-emerald-600 transition-colors">
+                                  {shop.shopName}
+                                </h3>
+                                <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-neutral-6">
+                                  <span className="flex items-center gap-1">
+                                    <DollarSign className="h-3.5 w-3.5" />
+                                    {shop.totalRevenue.toLocaleString("vi-VN")} đ
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Package className="h-3.5 w-3.5" />
+                                    {shop.totalOrders.toLocaleString("vi-VN")} đơn
+                                  </span>
+                                  {aov > 0 && (
+                                    <span className="flex items-center gap-1">
+                                      <Target className="h-3.5 w-3.5" />
+                                      AOV: {aov.toLocaleString("vi-VN")} đ
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <span className="flex-shrink-0 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                                Rank #{shop.rank}
+                              </span>
+                            </div>
+                            
+                            {/* Progress Bar */}
+                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-3/60 dark:bg-neutral-8/60">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 transition-all duration-500"
+                                style={{ width: `${widthPercent}%` }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );

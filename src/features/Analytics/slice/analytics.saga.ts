@@ -122,20 +122,37 @@ function* fetchAnalyticsDataWorker(
     /**
      * Normalize top shops
      * Backend success payload: data: items[]
-     * item: { shopId, orders, netRevenue, ... }
+     * item: { shopId, orders, netRevenue, shopName, ... }
      */
+    console.log("🚀 [Analytics Saga] topShopsResponse:", topShopsResponse);
+    
     const topShopsRaw: any[] = Array.isArray((topShopsResponse as any).data)
       ? (topShopsResponse as any).data
       : (topShopsResponse as any).data?.shops || [];
 
-    const topShopsData: TopShop[] = topShopsRaw.map((shop: any, index: number): TopShop => ({
-      shopId: shop.shopId || shop._id || "",
-      shopName: shop.shopName || shop.name || "",
-      shopLogo: shop.shopLogo || shop.logo,
-      totalRevenue: shop.netRevenue || shop.totalRevenue || shop.revenue || 0,
-      totalOrders: shop.orders || shop.totalOrders || shop.orderCount || 0,
-      rank: shop.rank ?? index + 1,
-    }));
+    console.log("🔍 [Analytics Saga] Raw top shops data:", topShopsRaw);
+    console.log("🔍 [Analytics Saga] Raw top shops data length:", topShopsRaw.length);
+
+    const topShopsData: TopShop[] = topShopsRaw.map((shop: any, index: number): TopShop => {
+      const shopName = shop.shopName || shop.name || shop.shopInfo?.name || `Shop ${index + 1}`;
+      console.log(`🔍 [Analytics Saga] Shop ${index + 1}:`, {
+        shopId: shop.shopId || shop._id,
+        shopName,
+        rawShop: shop,
+      });
+      
+      return {
+        shopId: shop.shopId || shop._id || "",
+        shopName,
+        shopLogo: shop.shopLogo || shop.logo || shop.shopInfo?.logo,
+        totalRevenue: shop.netRevenue || shop.totalRevenue || shop.revenue || 0,
+        totalOrders: shop.orders || shop.totalOrders || shop.orderCount || 0,
+        averageOrderValue: shop.averageOrderValue || (shop.orders > 0 ? Math.round((shop.netRevenue || shop.totalRevenue || 0) / shop.orders) : 0),
+        rank: shop.rank ?? index + 1,
+      };
+    });
+
+    console.log("✅ [Analytics Saga] Normalized top shops:", topShopsData);
 
     /**
      * Normalize order status distribution

@@ -29,6 +29,7 @@ export interface TopShop {
   shopLogo?: string;
   totalRevenue: number;
   totalOrders: number;
+  averageOrderValue?: number;
   rank: number;
 }
 

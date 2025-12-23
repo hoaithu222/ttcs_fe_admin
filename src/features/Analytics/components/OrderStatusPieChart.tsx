@@ -10,7 +10,19 @@ interface OrderStatusPieChartProps {
   isLoading?: boolean;
 }
 
-const RING_COLORS = ["#22d3ee", "#facc15", "#fb7185", "#a855f7", "#34d399", "#0ea5e9"];
+// 1. Tạo cấu hình Mapping (Tiếng Việt + Màu sắc cố định)
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  pending: { label: "Chờ xử lý", color: "#22d3ee" },      // Cyan
+  processing: { label: "Đang xử lý", color: "#a855f7" },  // Purple
+  delivered: { label: "Đã giao hàng", color: "#facc15" }, // Yellow
+  cancelled: { label: "Đã hủy", color: "#fb7185" },       // Red/Pink
+  // Thêm các trạng thái khác nếu có
+  shipped: { label: "Đang vận chuyển", color: "#34d399" },
+  returned: { label: "Trả hàng", color: "#94a3b8" },
+};
+
+// Màu mặc định nếu trạng thái không khớp config trên
+const DEFAULT_COLOR = "#0ea5e9"; 
 
 const OrderStatusPieChart: React.FC<OrderStatusPieChartProps> = ({ data, isLoading }) => {
   if (isLoading || !data || data.length === 0) {
@@ -33,15 +45,25 @@ const OrderStatusPieChart: React.FC<OrderStatusPieChartProps> = ({ data, isLoadi
     );
   }
 
-  // Format data for chart
-  const chartData = data.map((item, index) => ({
-    name: item.status,
-    value: item.count,
-    percentage: item.percentage || 0,
-    color: RING_COLORS[index % RING_COLORS.length],
-  }));
+  // 2. Format data sử dụng Mapping Tiếng Việt
+  const chartData = data.map((item) => {
+    // Chuyển key về chữ thường để khớp với config
+    const statusKey = item.status.toLowerCase();
+    const config = STATUS_CONFIG[statusKey];
+
+    return {
+      // Nếu có trong config thì lấy label tiếng Việt, không thì giữ nguyên tiếng Anh
+      name: config ? config.label : item.status,
+      value: item.count,
+      percentage: item.percentage || 0,
+      // Lấy màu từ config hoặc màu mặc định
+      color: config ? config.color : DEFAULT_COLOR,
+    };
+  });
 
   const total = data.reduce((sum, item) => sum + item.count, 0);
+  
+  // Tìm phần tử chiếm tỉ trọng lớn nhất để hiển thị ở giữa
   const leading = chartData.reduce((prev, curr) => (curr.value > prev.value ? curr : prev), chartData[0]);
 
   const panelSurfaceStyle = {
@@ -84,25 +106,29 @@ const OrderStatusPieChart: React.FC<OrderStatusPieChartProps> = ({ data, isLoadi
                 formatter={(value: number, name: string, props: any) => {
                   return [
                     `${value.toLocaleString("vi-VN")} (${formatPercent(props.payload.percentage)})`,
-                    props.payload.name,
+                    props.payload.name, // Sẽ hiển thị tiếng Việt ở đây
                   ];
                 }}
               />
             </PieChart>
           </ResponsiveContainer>
+          
+          {/* Label ở giữa biểu đồ */}
           <div
             className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center rounded-full text-center"
             style={{
               background: `linear-gradient(180deg, transparent 0%, ${analyticsVar("analytics-card-end")} 120%)`,
             }}
           >
-            <p className={`text-xs ${chartTheme.copy.eyebrow}`}>CHIẾM</p>
+            <p className={`text-xs ${chartTheme.copy.eyebrow}`}>CHIẾM ĐA SỐ</p>
             <p className={`text-3xl font-bold ${chartTheme.copy.primary}`}>
               {formatPercent(leading.percentage)}
             </p>
+            {/* Hiển thị tên trạng thái tiếng Việt */}
             <p className={`text-xs ${chartTheme.copy.muted}`}>{leading.name}</p>
           </div>
         </div>
+        
         <div className="space-y-4">
           <div
             className="rounded-2xl p-4 text-center shadow-inner"
@@ -114,6 +140,8 @@ const OrderStatusPieChart: React.FC<OrderStatusPieChartProps> = ({ data, isLoadi
             </p>
             <p className={`text-sm ${chartTheme.copy.muted}`}>Trong khoảng thời gian chọn</p>
           </div>
+          
+          {/* List danh sách trạng thái tiếng Việt */}
           <div className="space-y-3">
             {chartData.map((item) => (
               <div
@@ -144,4 +172,3 @@ const OrderStatusPieChart: React.FC<OrderStatusPieChartProps> = ({ data, isLoadi
 };
 
 export default OrderStatusPieChart;
-
