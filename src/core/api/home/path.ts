@@ -25,4 +25,3 @@ export const buildEndpoint = (
   }
   return builtEndpoint;
 };
-

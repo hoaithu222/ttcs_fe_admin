@@ -44,6 +44,12 @@
       content="Trang quản trị hệ thống - Quản lý sản phẩm, đơn hàng, người dùng và tất cả hoạt động của hệ thống thương mại điện tử."
     />
     <meta name="twitter:image" content="./src/assets/kma.jpg" />
+    <!-- Polyfill for Node.js global variable (needed for simple-peer) -->
+    <script>
+      if (typeof global === 'undefined') {
+        var global = globalThis;
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

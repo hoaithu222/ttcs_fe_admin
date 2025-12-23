@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useMemo } from "react";
-import { X } from "lucide-react";
+import React, { useEffect, useRef, useMemo, useState } from "react";
+import { X, Phone, Video } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import {
   selectCurrentConversation,
@@ -24,38 +24,33 @@ import Spinner from "@/foundation/components/feedback/Spinner";
 import Empty from "@/foundation/components/empty/Empty";
 import MessageItem from "./MessageItem";
 import type { ChatMessage } from "@/core/api/chat/type";
+import { CallComponent } from "./CallComponent";
 
 const ChatWindow: React.FC = () => {
+  const [showCall, setShowCall] = useState(false);
+  const [callType, setCallType] = useState<"voice" | "video" | null>(null);
   const dispatch = useAppDispatch();
   const currentConversation = useAppSelector(selectCurrentConversation);
   const conversations = useAppSelector(selectConversations);
   const messages = useAppSelector((state) =>
-    currentConversation
-      ? selectChatMessages(currentConversation._id)(state)
-      : []
+    currentConversation ? selectChatMessages(currentConversation._id)(state) : []
   );
   const status = useAppSelector(selectChatStatus);
   const user = useAppSelector(selectUser);
   const currentUserId = user?._id;
   // Memoized selectors for typing/online users to avoid selector warnings and unnecessary re-renders
   const typingUsersSelector = useMemo(
-    () =>
-      currentConversation
-        ? selectTypingUsers(currentConversation._id)
-        : () => [],
+    () => (currentConversation ? selectTypingUsers(currentConversation._id) : () => []),
     [currentConversation?._id]
   );
 
   const onlineUsersSelector = useMemo(
-    () =>
-      currentConversation
-        ? selectOnlineUsers(currentConversation._id)
-        : () => [],
+    () => (currentConversation ? selectOnlineUsers(currentConversation._id) : () => []),
     [currentConversation?._id]
   );
 
-  const typingUsers = useAppSelector(typingUsersSelector as any);
-  const onlineUsers = useAppSelector(onlineUsersSelector as any);
+  const typingUsers = useAppSelector(typingUsersSelector as any) as string[];
+  const onlineUsers = useAppSelector(onlineUsersSelector as any) as string[];
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<any>(null);
@@ -79,8 +74,7 @@ const ChatWindow: React.FC = () => {
     );
 
     // Join conversation room to receive real-time messages
-    const channel =
-      (currentConversation.channel as "admin" | "shop" | "ai") || "admin";
+    const channel = (currentConversation.channel as "admin" | "shop" | "ai") || "admin";
     let socketClient;
 
     switch (channel) {
@@ -107,10 +101,7 @@ const ChatWindow: React.FC = () => {
 
         // Listen for typing events
         socket.on(SOCKET_EVENTS.CHAT_TYPING, (payload: any) => {
-          if (
-            payload?.conversationId === conversationId &&
-            payload?.userId !== currentUserId
-          ) {
+          if (payload?.conversationId === conversationId && payload?.userId !== currentUserId) {
             dispatch(
               setTyping({
                 conversationId: payload.conversationId,
@@ -177,18 +168,13 @@ const ChatWindow: React.FC = () => {
         );
       });
     };
-  }, [
-    currentConversation?._id,
-    currentConversation?.channel,
-    currentUserId,
-    dispatch,
-  ]);
+  }, [currentConversation?._id, currentConversation?.channel, currentUserId, dispatch]);
 
   // Mark as read only when ChatWindow is actually visible and messages are loaded
   useEffect(() => {
     if (
-      currentConversation && 
-      messages.length > 0 && 
+      currentConversation &&
+      messages.length > 0 &&
       status !== "LOADING" // Only mark as read after messages are loaded
     ) {
       // Mark as read when viewing conversation (ChatWindow is mounted and visible)
@@ -217,14 +203,13 @@ const ChatWindow: React.FC = () => {
   }
 
   // Always get conversation from list to ensure participants are preserved
-  const conversationToUse = conversations.find(
-    (c) => c._id === currentConversation._id
-  ) || currentConversation;
-  
-  const otherParticipant = conversationToUse.participants.find(
-    (p: { userId: string }) => p.userId !== currentUserId
-  ) || conversationToUse.participants[0];
-  
+  const conversationToUse =
+    conversations.find((c: any) => c._id === currentConversation._id) || currentConversation;
+
+  const otherParticipant =
+    conversationToUse.participants.find((p: { userId: string }) => p.userId !== currentUserId) ||
+    conversationToUse.participants[0];
+
   const isOtherUserOnline = otherParticipant && onlineUsers.includes(otherParticipant.userId);
   const isOtherUserTyping = otherParticipant && typingUsers.includes(otherParticipant.userId);
 
@@ -267,13 +252,38 @@ const ChatWindow: React.FC = () => {
             <p className="text-xs text-neutral-6 text-start">Offline</p>
           )}
         </div>
-        <button
-          onClick={handleClose}
-          className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-neutral-2 flex-shrink-0"
-          aria-label="Đóng cuộc trò chuyện"
-        >
-          <X className="w-4 h-4 text-neutral-7" />
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Call buttons */}
+          <button
+            onClick={() => {
+              setCallType("voice");
+              setShowCall(true);
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-neutral-2 text-neutral-7 hover:text-primary-7"
+            aria-label="Gọi thoại"
+            title="Gọi thoại"
+          >
+            <Phone className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              setCallType("video");
+              setShowCall(true);
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-neutral-2 text-neutral-7 hover:text-primary-7"
+            aria-label="Gọi video"
+            title="Gọi video"
+          >
+            <Video className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-neutral-2 flex-shrink-0"
+            aria-label="Đóng cuộc trò chuyện"
+          >
+            <X className="w-4 h-4 text-neutral-7" />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -328,9 +338,18 @@ const ChatWindow: React.FC = () => {
                   <div className="flex flex-col max-w-[75%] sm:max-w-[65%]">
                     <div className="rounded-2xl px-4 py-2.5 bg-gradient-to-br from-background-2 to-background-1 text-neutral-10 rounded-bl-md border border-neutral-3">
                       <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-neutral-6 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                        <span className="w-2 h-2 bg-neutral-6 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                        <span className="w-2 h-2 bg-neutral-6 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                        <span
+                          className="w-2 h-2 bg-neutral-6 rounded-full animate-bounce"
+                          style={{ animationDelay: "0ms" }}
+                        ></span>
+                        <span
+                          className="w-2 h-2 bg-neutral-6 rounded-full animate-bounce"
+                          style={{ animationDelay: "150ms" }}
+                        ></span>
+                        <span
+                          className="w-2 h-2 bg-neutral-6 rounded-full animate-bounce"
+                          style={{ animationDelay: "300ms" }}
+                        ></span>
                       </div>
                     </div>
                   </div>
@@ -341,9 +360,21 @@ const ChatWindow: React.FC = () => {
           </ScrollView>
         )}
       </div>
+
+      {/* Call Component */}
+      {showCall && currentConversation && callType && (
+        <CallComponent
+          conversationId={currentConversation._id}
+          channel={(currentConversation.channel as "admin" | "shop" | "ai") || "admin"}
+          callType={callType}
+          onCallEnd={() => {
+            setShowCall(false);
+            setCallType(null);
+          }}
+        />
+      )}
     </div>
   );
 };
 
 export default ChatWindow;
-
