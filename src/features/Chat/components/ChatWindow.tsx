@@ -252,8 +252,7 @@ const ChatWindow: React.FC = () => {
             <p className="text-xs text-neutral-6 text-start">Offline</p>
           )}
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {/* Call buttons */}
+        {/* <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={() => {
               setCallType("voice");
@@ -283,7 +282,7 @@ const ChatWindow: React.FC = () => {
           >
             <X className="w-4 h-4 text-neutral-7" />
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Messages */}
