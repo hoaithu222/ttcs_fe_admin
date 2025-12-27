@@ -26,7 +26,7 @@ const Sidebar = () => {
     { key: "homeConfiguration", icon: Home, path: NAVIGATION_CONFIG.homeConfiguration.path },
     { key: "dashboard", icon: LayoutDashboard, path: NAVIGATION_CONFIG.dashboard.path },
     { key: "users", icon: Users, path: NAVIGATION_CONFIG.users.path },
-    // { key: "products", icon: Package, path: NAVIGATION_CONFIG.products.path },
+    { key: "products", icon: Package, path: NAVIGATION_CONFIG.products.path },
     // { key: "orders", icon: ShoppingCart, path: NAVIGATION_CONFIG.orders.path },
     { key: "categories", icon: FolderOpen, path: NAVIGATION_CONFIG.categories.path },
     { key: "subCategories", icon: FolderOpen, path: NAVIGATION_CONFIG.subCategories.path },

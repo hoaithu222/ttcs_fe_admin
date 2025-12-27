@@ -1,28 +1,48 @@
-// Products request types
-export interface CreateProductRequest {
+export interface Product {
+  _id: string;
   name: string;
   description: string;
-  images: string[];
-  shopId: string;
-  subCategoryId: string;
-  categoryId: string;
+  images: Array<{ url: string; publicId?: string; _id?: string } | string>;
+  shopId: {
+    _id: string;
+    name: string;
+    logo?: string;
+    rating?: number;
+  };
+  categoryId: {
+    _id: string;
+    name: string;
+    slug?: string;
+  };
+  subCategoryId: {
+    _id: string;
+    name: string;
+    slug?: string;
+  };
   price: number;
-  discount?: number;
-  stock?: number;
-  rating?: number; // 0-5, default 0
-  salesCount?: number; // default 0
-  warrantyInfo: string;
-  weight?: number;
-  dimensions: string;
-  metaKeywords: string;
-  viewCount?: number; // default 0
-  isActive?: boolean;
+  discount: number;
+  stock: number;
+  rating: number;
+  reviewCount: number;
+  salesCount: number;
+  viewCount: number;
+  isActive: boolean;
+  status: "pending" | "approved" | "hidden" | "violated";
+  violationNote?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  variants?: Array<{
+    attributes: Record<string, any>;
+    price: number;
+    stock: number;
+    image?: string;
+    sku?: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface UpdateProductRequest extends CreateProductRequest {}
-
-// Products query parameters
-export interface ProductsQueryParams {
+export interface ProductListQuery {
   page?: number;
   limit?: number;
   categoryId?: string;
@@ -31,64 +51,29 @@ export interface ProductsQueryParams {
   search?: string;
   minPrice?: number;
   maxPrice?: number;
+  rating?: number;
+  inStock?: boolean;
   isActive?: boolean;
+  status?: "approved" | "hidden" | "violated";
   sortBy?: "createdAt" | "price" | "rating" | "salesCount" | "viewCount";
   sortOrder?: "asc" | "desc";
 }
 
-// Products response types
-export interface Product {
-  _id: string;
-  name: string;
-  description?: string;
-  images: string[];
-  shopId: string;
-  subCategoryId: string;
-  categoryId: string;
-  price: number;
-  discount?: number;
-  stock?: number;
-  warrantyInfo: string;
-  weight?: number;
-  dimensions: string;
-  metaKeywords: string;
-  isActive: boolean;
-  rating?: number;
-  salesCount?: number;
-  viewCount?: number;
-  createdAt: string;
-  updatedAt: string;
+export interface ProductListResponse {
+  items: Product[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
 
-export interface ProductsListResponse {
-  products: Product[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+export interface UpdateProductStatusRequest {
+  status: "pending" | "approved" | "hidden" | "violated";
+  violationNote?: string;
 }
 
-// API response wrapper (reuse from auth)
-export interface ApiSuccess<T = any> {
+export interface ApiSuccess<T> {
   success: boolean;
-  message: string;
-  data?: T;
-  meta?: any;
-  timestamp: string;
-  code: number;
-}
-
-export interface ApiError {
-  success: boolean;
-  message: string;
-  errors?: Array<{
-    field: string;
-    message: string;
-  }>;
-  timestamp: string;
-  path: string;
-  method: string;
-  code: number;
+  data: T;
+  message?: string;
 }

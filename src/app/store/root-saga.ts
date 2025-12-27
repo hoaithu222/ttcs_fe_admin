@@ -4,6 +4,7 @@ import { categorySaga } from "@/features/Category/slice/category.saga";
 import { subCategorySaga } from "@/features/SubCategory/slice/subCategory.saga";
 import { attributeTypeSaga } from "@/features/Attribute/slice/attributeType.saga";
 import { attributeValueSaga } from "@/features/Attribute/slice/attributeValue.saga";
+import { productSaga } from "@/features/Products/slice/product.saga";
 import { shopSaga } from "@/features/Shop/slice/Shop.saga";
 import { userSaga } from "@/features/Users/slice/user.saga";
 import { homeSaga } from "@/features/Home/slice/home.saga";
@@ -22,6 +23,7 @@ export const rootSage = function* () {
       subCategorySaga(),
       attributeTypeSaga(),
       attributeValueSaga(),
+      productSaga(),
       shopSaga(),
       userSaga(),
       homeSaga(),

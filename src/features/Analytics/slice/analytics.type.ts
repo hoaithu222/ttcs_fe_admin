@@ -6,6 +6,11 @@ import {
   TopShop,
   OrderStatusDistribution,
   AverageOrderValue,
+  ShopStrengthItem,
+  CashFlowItem,
+  PaymentMethodItem,
+  DeviceTypeItem,
+  SystemLoadItem,
   AnalyticsQuery,
 } from "@/core/api/analytics/type";
 
@@ -16,6 +21,13 @@ export interface AnalyticsState {
   topShops: TopShop[];
   orderStatusDistribution: OrderStatusDistribution[] | null;
   averageOrderValue: AverageOrderValue | null;
+  shopStrength: ShopStrengthItem[];
+  cashFlowGrowth: CashFlowItem[];
+  paymentDeviceDistribution: {
+    paymentMethods: PaymentMethodItem[];
+    deviceTypes: DeviceTypeItem[];
+  } | null;
+  systemLoad: SystemLoadItem[];
   isLoading: boolean;
   error: string | null;
   fetchAnalyticsData: {

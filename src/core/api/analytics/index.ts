@@ -6,6 +6,10 @@ import type {
   TopShopsResponse,
   OrderStatusResponse,
   AOVResponse,
+  ShopStrengthResponse,
+  CashFlowResponse,
+  PaymentDeviceResponse,
+  SystemLoadResponse,
   AnalyticsQuery,
   ApiSuccess,
 } from "./type";
@@ -71,6 +75,34 @@ class AnalyticsApiService extends VpsHttpClient {
   // Get average order value
   async getAverageOrderValue(query?: AnalyticsQuery): Promise<ApiSuccess<AOVResponse>> {
     const response = await this.get(ANALYTICS_ENDPOINTS.ORDERS_AOV, { params: query });
+    return response.data;
+  }
+
+  // 1. Get shop strength quadrant data
+  async getShopStrength(query?: AnalyticsQuery): Promise<ApiSuccess<ShopStrengthResponse>> {
+    const response = await this.get(ANALYTICS_ENDPOINTS.SHOP_STRENGTH, { params: query });
+    return response.data;
+  }
+
+  // 2. Get cash flow growth with MA30 and Net Profit
+  async getCashFlowGrowth(query?: AnalyticsQuery): Promise<ApiSuccess<CashFlowResponse>> {
+    const response = await this.get(ANALYTICS_ENDPOINTS.CASH_FLOW_GROWTH, { params: query });
+    return response.data;
+  }
+
+  // 3. Get payment method and device type distribution
+  async getPaymentDeviceDistribution(
+    query?: AnalyticsQuery
+  ): Promise<ApiSuccess<PaymentDeviceResponse>> {
+    const response = await this.get(ANALYTICS_ENDPOINTS.PAYMENT_DEVICE_DISTRIBUTION, {
+      params: query,
+    });
+    return response.data;
+  }
+
+  // 4. Get system load stats
+  async getSystemLoad(query?: AnalyticsQuery): Promise<ApiSuccess<SystemLoadResponse>> {
+    const response = await this.get(ANALYTICS_ENDPOINTS.SYSTEM_LOAD, { params: query });
     return response.data;
   }
 }

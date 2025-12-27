@@ -6,7 +6,7 @@ const DashboardPage = lazy(() => import("@/features/Dashboard/page/DashboardPage
 const AnalyticsPage = lazy(() => import("@/features/Analytics/page/AnalyticsPage"));
 const SettingsPage = lazy(() => import("@/features/Settings/page/SettingsPage"));
 const UsersPage = lazy(() => import("@/features/Users/UsersPage"));
-const ProductsPage = lazy(() => import("@/features/Products/ProductsPage"));
+const ProductsPage = lazy(() => import("@/features/Products/ProductsPage").then(module => ({ default: module.ProductsPage })));
 const ShopPage = lazy(() => import("@/features/Shop/page/ShopPage"));
 // Switch to static imports to avoid dynamic import fetch errors during dev
 import CategoriesPage from "@/features/Category/page/CategoryPage";

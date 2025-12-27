@@ -50,3 +50,23 @@ export const selectFetchAnalyticsDataStatus = createSelector(
   (analytics) => analytics.fetchAnalyticsData.status
 );
 
+export const selectShopStrength = createSelector(
+  [analyticsState],
+  (analytics) => analytics.shopStrength
+);
+
+export const selectCashFlowGrowth = createSelector(
+  [analyticsState],
+  (analytics) => analytics.cashFlowGrowth
+);
+
+export const selectPaymentDeviceDistribution = createSelector(
+  [analyticsState],
+  (analytics) => analytics.paymentDeviceDistribution
+);
+
+export const selectSystemLoad = createSelector(
+  [analyticsState],
+  (analytics) => analytics.systemLoad
+);
+

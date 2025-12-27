@@ -120,13 +120,13 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Center - Search */}
+        {/* Center - Search 
         <div className="flex flex-1 justify-center items-center mx-4 max-w-md md:mx-8">
           <div className="relative w-full">
-            {/* Search Input Glow Effect */}
+          
             <div className="absolute inset-0 bg-gradient-to-r rounded-xl opacity-0 blur-sm transition-opacity duration-300 from-primary-6/20 via-primary-8/10 to-primary-6/20 hover:opacity-100" />
 
-            {/* Search Input Border Effect */}
+         
             <div className="absolute inset-0 rounded-xl border opacity-0 transition-all duration-300 pointer-events-none border-primary-6/30 hover:opacity-100" />
 
             <div className="relative">
@@ -144,6 +144,7 @@ const Header = () => {
             </div>
           </div>
         </div>
+        */}
 
         {/* Right side - Actions */}
         <div className="flex items-center space-x-4">

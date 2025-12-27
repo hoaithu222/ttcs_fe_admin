@@ -7,6 +7,7 @@ import categoryReducer from "@/features/Category/slice/category.slice";
 import subCategoryReducer from "@/features/SubCategory/slice/subCategory.slice";
 import attributeTypeReducer from "@/features/Attribute/slice/attributeType.slice";
 import attributeValueReducer from "@/features/Attribute/slice/attributeValue.slice";
+import productReducer from "@/features/Products/slice/product.slice";
 import shopReducer from "@/features/Shop/slice/Shop.slice";
 import userReducer from "@/features/Users/slice/user.slice";
 import homeReducer from "@/features/Home/slice/home.slice";
@@ -27,6 +28,7 @@ export const rootReducer = combineReducers({
   subCategory: subCategoryReducer,
   attributeType: attributeTypeReducer,
   attributeValue: attributeValueReducer,
+  product: productReducer,
   shop: shopReducer,
   user: userReducer,
   home: homeReducer,

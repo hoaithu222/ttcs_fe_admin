@@ -1,15 +1,13 @@
-// Products API endpoints
-export const PRODUCTS_ENDPOINTS = {
+// Product API endpoints
+export const PRODUCT_ENDPOINTS = {
   LIST: "/products",
-  DETAIL: "/products/:id",
-  CREATE: "/products",
-  UPDATE: "/products/:id",
-  DELETE: "/products/:id",
+  GET: "/products/:id",
+  UPDATE_STATUS: "/products/:id/status",
   SEARCH: "/products/search",
-  CATEGORIES: "/products/categories",
-  SUBCATEGORIES: "/products/subcategories",
-  SHOPS: "/products/shops",
 } as const;
+
+// Alias for backward compatibility
+export const PRODUCTS_ENDPOINTS = PRODUCT_ENDPOINTS;
 
 // Generic endpoint builder
 export const buildEndpoint = (
@@ -18,7 +16,8 @@ export const buildEndpoint = (
 ): string => {
   if (!params) return endpoint;
 
-  return Object.entries(params).reduce((url, [key, value]) => {
-    return url.replace(`:${key}`, String(value));
-  }, endpoint);
+  return Object.entries(params).reduce(
+    (acc, [key, value]) => acc.replace(`:${key}`, String(value)),
+    endpoint
+  );
 };

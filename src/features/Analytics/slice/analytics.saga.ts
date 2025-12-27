@@ -8,6 +8,11 @@ import type {
   OrderStatusDistribution,
   AverageOrderValue,
   RevenueData,
+  ShopStrengthItem,
+  CashFlowItem,
+  PaymentMethodItem,
+  DeviceTypeItem,
+  SystemLoadItem,
 } from "@/core/api/analytics/type";
 import { addToast } from "@/app/store/slices/toast";
 import type { fetchAnalyticsDataStart } from "./analytics.slice";
@@ -36,13 +41,18 @@ function* fetchAnalyticsDataWorker(
     // Map UI query => backend query params
     const apiQuery: any = query
       ? {
-          from: query.startDate,
-          to: query.endDate,
+          from: query.startDate ? new Date(query.startDate).toISOString() : undefined,
+          to: query.endDate ? new Date(query.endDate).toISOString() : undefined,
+          period: query.period,
           granularity:
-            query.period === "month" || query.period === "year"
+            query.period === "year"
               ? "month"
-              : query.period === "day"
+              : query.period === "month"
               ? "day"
+              : query.period === "week"
+              ? "day"
+              : query.period === "day"
+              ? "hour"
               : undefined,
           limit: query.limit,
         }
@@ -58,6 +68,10 @@ function* fetchAnalyticsDataWorker(
       topShopsResponse,
       orderStatusResponse,
       aovResponse,
+      shopStrengthResponse,
+      cashFlowGrowthResponse,
+      paymentDeviceResponse,
+      systemLoadResponse,
     ] = yield all([
       call([analyticsApi, analyticsApi.getAdminRevenue], apiQuery),
       call([analyticsApi, analyticsApi.getRevenueTimeSeries], apiQuery),
@@ -66,6 +80,10 @@ function* fetchAnalyticsDataWorker(
       // Endpoint không nhận query nên không truyền apiQuery để tránh lỗi type
       call([analyticsApi, analyticsApi.getOrderStatusDistribution]),
       call([analyticsApi, analyticsApi.getAverageOrderValue], apiQuery),
+      call(() => (analyticsApi as any).getShopStrength(apiQuery)),
+      call(() => (analyticsApi as any).getCashFlowGrowth(apiQuery)),
+      call(() => (analyticsApi as any).getPaymentDeviceDistribution(apiQuery)),
+      call(() => (analyticsApi as any).getSystemLoad(apiQuery)),
     ]);
 
     /**
@@ -193,6 +211,80 @@ function* fetchAnalyticsDataWorker(
         }
       : undefined;
 
+    /**
+     * Normalize shop strength data
+     */
+    const shopStrengthRaw: any[] = Array.isArray((shopStrengthResponse as any).data)
+      ? (shopStrengthResponse as any).data
+      : (shopStrengthResponse as any).data?.items || [];
+
+    const shopStrengthData: ShopStrengthItem[] = shopStrengthRaw.map(
+      (item: any): ShopStrengthItem => ({
+        shopId: item.shopId || "",
+        shopName: item.shopName || "Unknown Shop",
+        shopLogo: item.shopLogo,
+        gmv: item.gmv || 0,
+        rating: item.rating || 0,
+        conversionRate: item.conversionRate || 0,
+        totalOrders: item.totalOrders || 0,
+        quadrant: item.quadrant || 3,
+        quadrantName: item.quadrantName || "Giảm mạnh",
+        quadrantColor: item.quadrantColor || "#ef4444",
+      })
+    );
+
+    /**
+     * Normalize cash flow growth data
+     */
+    const cashFlowRaw: any[] = Array.isArray((cashFlowGrowthResponse as any).data)
+      ? (cashFlowGrowthResponse as any).data
+      : (cashFlowGrowthResponse as any).data?.items || [];
+
+    const cashFlowData: CashFlowItem[] = cashFlowRaw.map((item: any): CashFlowItem => ({
+      date: item.date || item.bucket || "",
+      gmv: item.gmv || 0,
+      discounts: item.discounts || 0,
+      orders: item.orders || 0,
+      netProfit: item.netProfit || 0,
+      ma30: item.ma30 || 0,
+    }));
+
+    /**
+     * Normalize payment and device distribution
+     */
+    const paymentDeviceRaw = (paymentDeviceResponse as any).data || {};
+    const paymentMethodsData: PaymentMethodItem[] = (
+      paymentDeviceRaw.paymentMethods || []
+    ).map((item: any): PaymentMethodItem => ({
+      method: item.method || "Khác",
+      count: item.count || 0,
+      totalAmount: item.totalAmount || 0,
+      percentage: item.percentage || 0,
+    }));
+
+    const deviceTypesData: DeviceTypeItem[] = (paymentDeviceRaw.deviceTypes || []).map(
+      (item: any): DeviceTypeItem => ({
+        device: item.device || "Unknown",
+        count: item.count || 0,
+        percentage: item.percentage || 0,
+      })
+    );
+
+    /**
+     * Normalize system load data
+     */
+    const systemLoadRaw: any[] = Array.isArray((systemLoadResponse as any).data)
+      ? (systemLoadResponse as any).data
+      : (systemLoadResponse as any).data?.items || [];
+
+    const systemLoadData: SystemLoadItem[] = systemLoadRaw.map(
+      (item: any): SystemLoadItem => ({
+        timestamp: item.timestamp || item.date || "",
+        requestCount: item.requestCount || 0,
+        comparisonValue: item.comparisonValue || 0,
+      })
+    );
+
     yield put(
       fetchAnalyticsDataSuccess({
         adminRevenue: revenueData,
@@ -201,6 +293,13 @@ function* fetchAnalyticsDataWorker(
         topShops: topShopsData,
         orderStatusDistribution: orderStatusData,
         averageOrderValue: aovData,
+        shopStrength: shopStrengthData,
+        cashFlowGrowth: cashFlowData,
+        paymentDeviceDistribution: {
+          paymentMethods: paymentMethodsData,
+          deviceTypes: deviceTypesData,
+        },
+        systemLoad: systemLoadData,
       })
     );
   } catch (error: unknown) {

@@ -7,6 +7,11 @@ import {
   TopShop,
   OrderStatusDistribution as OrderStatusDistributionItem,
   AverageOrderValue,
+  ShopStrengthItem,
+  CashFlowItem,
+  PaymentMethodItem,
+  DeviceTypeItem,
+  SystemLoadItem,
   AnalyticsQuery,
 } from "@/core/api/analytics/type";
 import { ReduxStateType } from "@/app/store/types";
@@ -18,6 +23,10 @@ const initialState: AnalyticsState = {
   topShops: [],
   orderStatusDistribution: null,
   averageOrderValue: null,
+  shopStrength: [],
+  cashFlowGrowth: [],
+  paymentDeviceDistribution: null,
+  systemLoad: [],
   isLoading: false,
   error: null,
   fetchAnalyticsData: {
@@ -52,6 +61,13 @@ const analyticsSlice = createSlice({
         topShops?: TopShop[];
         orderStatusDistribution?: OrderStatusDistributionItem[];
         averageOrderValue?: AverageOrderValue;
+        shopStrength?: ShopStrengthItem[];
+        cashFlowGrowth?: CashFlowItem[];
+        paymentDeviceDistribution?: {
+          paymentMethods: PaymentMethodItem[];
+          deviceTypes: DeviceTypeItem[];
+        };
+        systemLoad?: SystemLoadItem[];
       }>
     ) => {
       state.isLoading = false;
@@ -77,6 +93,18 @@ const analyticsSlice = createSlice({
       }
       if (action.payload.averageOrderValue) {
         state.averageOrderValue = action.payload.averageOrderValue;
+      }
+      if (action.payload.shopStrength) {
+        state.shopStrength = action.payload.shopStrength;
+      }
+      if (action.payload.cashFlowGrowth) {
+        state.cashFlowGrowth = action.payload.cashFlowGrowth;
+      }
+      if (action.payload.paymentDeviceDistribution) {
+        state.paymentDeviceDistribution = action.payload.paymentDeviceDistribution;
+      }
+      if (action.payload.systemLoad) {
+        state.systemLoad = action.payload.systemLoad;
       }
     },
     fetchAnalyticsDataFailure: (state, action: PayloadAction<string>) => {

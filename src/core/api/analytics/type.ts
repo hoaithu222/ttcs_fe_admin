@@ -50,7 +50,7 @@ export interface AverageOrderValue {
 export interface AnalyticsQuery {
   startDate?: string;
   endDate?: string;
-  period?: "day" | "week" | "month" | "year";
+  period?: "day" | "week" | "month" | "year" | "custom";
   limit?: number;
 }
 
@@ -77,6 +77,68 @@ export interface OrderStatusResponse {
 
 export interface AOVResponse {
   aov: AverageOrderValue;
+}
+
+// 1. Shop Strength Quadrant
+export interface ShopStrengthItem {
+  shopId: string;
+  shopName: string;
+  shopLogo?: string;
+  gmv: number;
+  rating: number;
+  conversionRate: number;
+  totalOrders: number;
+  quadrant: number;
+  quadrantName: string;
+  quadrantColor: string;
+}
+
+export interface ShopStrengthResponse {
+  items: ShopStrengthItem[];
+}
+
+// 2. Cash Flow Growth
+export interface CashFlowItem {
+  date: string;
+  gmv: number;
+  discounts: number;
+  orders: number;
+  netProfit: number;
+  ma30: number;
+}
+
+export interface CashFlowResponse {
+  items: CashFlowItem[];
+}
+
+// 3. Payment & Device Distribution
+export interface PaymentMethodItem {
+  method: string;
+  count: number;
+  totalAmount: number;
+  percentage: number;
+}
+
+export interface DeviceTypeItem {
+  device: string;
+  count: number;
+  percentage: number;
+}
+
+export interface PaymentDeviceResponse {
+  paymentMethods: PaymentMethodItem[];
+  deviceTypes: DeviceTypeItem[];
+}
+
+// 4. System Load Stats
+export interface SystemLoadItem {
+  timestamp: string;
+  requestCount: number;
+  comparisonValue: number;
+}
+
+export interface SystemLoadResponse {
+  items: SystemLoadItem[];
 }
 
 // API response wrapper

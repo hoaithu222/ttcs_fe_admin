@@ -8,6 +8,10 @@ export const ANALYTICS_ENDPOINTS = {
   TOP_SHOPS: "/analytics/top/shops",
   ORDERS_STATUS_DISTRIBUTION: "/analytics/orders/status-distribution",
   ORDERS_AOV: "/analytics/orders/aov",
+  SHOP_STRENGTH: "/analytics/admin/shop-strength",
+  CASH_FLOW_GROWTH: "/analytics/admin/cash-flow-growth",
+  PAYMENT_DEVICE_DISTRIBUTION: "/analytics/admin/payment-device-distribution",
+  SYSTEM_LOAD: "/analytics/admin/system-load",
 } as const;
 
 // Generic endpoint builder

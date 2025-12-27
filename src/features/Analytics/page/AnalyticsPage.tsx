@@ -7,8 +7,13 @@ import {
   selectTopShops,
   selectOrderStatusDistribution,
   selectAverageOrderValue,
+  selectShopStrength,
+  selectCashFlowGrowth,
+  selectPaymentDeviceDistribution,
+  selectSystemLoad,
   selectAnalyticsLoading,
   selectAnalyticsError,
+  selectAnalyticsFilters,
 } from "../slice/analytics.selector";
 import { useAnalyticsActions } from "../hooks/useAnalyticsActions";
 import { Card } from "@/foundation/components/info/Card";
@@ -29,9 +34,12 @@ import TopShopsChart from "../components/TopShopsChart";
 import OrderStatusPieChart from "../components/OrderStatusPieChart";
 import RevenueAreaChart from "../components/RevenueAreaChart";
 import ComposedChartComponent from "../components/ComposedChart";
-import RadarChartComponent from "../components/RadarChart";
 import ScatterChartComponent from "../components/ScatterChart";
-import FunnelChartComponent from "../components/FunnelChart";
+import ShopStrengthQuadrantChart from "../components/ShopStrengthQuadrantChart";
+import CashFlowGrowthChart from "../components/CashFlowGrowthChart";
+import NestedDonutChart from "../components/NestedDonutChart";
+import SystemLoadChart from "../components/SystemLoadChart";
+import DateRangeFilter from "../components/DateRangeFilter";
 
 interface SectionHeaderProps {
   title: string;
@@ -66,9 +74,14 @@ const AnalyticsPage: React.FC = () => {
   const topShops = useAppSelector(selectTopShops);
   const orderStatusDistribution = useAppSelector(selectOrderStatusDistribution);
   const averageOrderValue = useAppSelector(selectAverageOrderValue);
+  const shopStrength = useAppSelector(selectShopStrength);
+  const cashFlowGrowth = useAppSelector(selectCashFlowGrowth);
+  const paymentDeviceDistribution = useAppSelector(selectPaymentDeviceDistribution);
+  const systemLoad = useAppSelector(selectSystemLoad);
   const isLoading = useAppSelector(selectAnalyticsLoading);
   const error = useAppSelector(selectAnalyticsError);
-  const { fetchAnalyticsData } = useAnalyticsActions();
+  const filters = useAppSelector(selectAnalyticsFilters);
+  const { fetchAnalyticsData, updateFilters } = useAnalyticsActions();
 
   const hasRevenueTimeSeries = useMemo(
     () => revenueTimeSeries && revenueTimeSeries.length > 0,
@@ -202,6 +215,11 @@ const AnalyticsPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleFilterChange = (query: AnalyticsQuery) => {
+    updateFilters(query);
+    fetchAnalyticsData(query);
+  };
+
 
   return (
     <ScrollView
@@ -213,6 +231,8 @@ const AnalyticsPage: React.FC = () => {
     >
       <div className="min-h-full bg-gradient-to-br from-background-base via-background-elevated to-background-base/90 p-6">
         <div className="mx-auto max-w-7xl space-y-8">
+          {/* Date Range Filter */}
+          <DateRangeFilter onFilterChange={handleFilterChange} currentQuery={filters} />
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-primary-8 via-primary-6 to-secondary-6 text-white shadow-2xl">
             <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_55%)]" />
             <div className="relative flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between">
@@ -350,12 +370,9 @@ const AnalyticsPage: React.FC = () => {
             <section className="space-y-4">
               <SectionHeader
                 title="Kênh xử lý đơn hàng"
-                description="Tỷ trọng trạng thái và tỷ lệ chuyển đổi qua từng bước phễu."
+                description="Tỷ trọng trạng thái đơn hàng trong hệ thống."
               />
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                <OrderStatusPieChart data={orderStatusDistribution!} isLoading={isLoading} />
-                <FunnelChartComponent data={orderStatusDistribution!} isLoading={isLoading} />
-              </div>
+              <OrderStatusPieChart data={orderStatusDistribution!} isLoading={isLoading} />
             </section>
           )}
 
@@ -372,13 +389,49 @@ const AnalyticsPage: React.FC = () => {
             </section>
           )}
 
-          {hasTopShops && (
+
+          {/* PHẦN 1: DÀNH CHO ADMIN - 4 TÍNH NĂNG MỚI */}
+          {shopStrength && shopStrength.length > 0 && (
             <section className="space-y-4">
               <SectionHeader
-                title="Năng lực cửa hàng"
-                description="So sánh cấu hình doanh thu và đơn hàng của từng cửa hàng."
+                title="Biểu đồ sức mạnh & Phân loại Shop"
+                description="Bản đồ sức mạnh Shop - Đánh giá chất lượng đối tác dựa trên GMV và Rating."
               />
-              <RadarChartComponent data={topShops} isLoading={isLoading} />
+              <ShopStrengthQuadrantChart data={shopStrength} isLoading={isLoading} />
+            </section>
+          )}
+
+          {cashFlowGrowth && cashFlowGrowth.length > 0 && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Dòng tiền & Tăng trưởng toàn sàn"
+                description="Theo dõi doanh thu toàn hệ thống (GMV), trung bình 30 ngày (MA30) và lợi nhuận ròng."
+              />
+              <CashFlowGrowthChart data={cashFlowGrowth} isLoading={isLoading} />
+            </section>
+          )}
+
+          {paymentDeviceDistribution && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Tỷ trọng người dùng & Dòng tiền"
+                description="Phân loại nguồn tiền (Thanh toán) và thiết bị người dùng để tối ưu UX/UI."
+              />
+              <NestedDonutChart
+                paymentMethods={paymentDeviceDistribution.paymentMethods}
+                deviceTypes={paymentDeviceDistribution.deviceTypes}
+                isLoading={isLoading}
+              />
+            </section>
+          )}
+
+          {systemLoad && systemLoad.length > 0 && (
+            <section className="space-y-4">
+              <SectionHeader
+                title="Thống kê truy cập & Tải hệ thống"
+                description="Phát hiện DDOS hoặc sự cố hệ thống khi lượng truy cập tăng đột biến."
+              />
+              <SystemLoadChart data={systemLoad} isLoading={isLoading} />
             </section>
           )}
 
@@ -476,106 +529,6 @@ const AnalyticsPage: React.FC = () => {
             </section>
           )}
 
-          {hasTopShops && (
-            <section className="space-y-4">
-              <SectionHeader
-                title="Chi tiết cửa hàng hàng đầu"
-                description="Theo dõi doanh thu và đơn hàng trên từng điểm bán."
-              />
-              <Card className="space-y-4 border border-white/10 bg-white/90 p-6 shadow-lg backdrop-blur dark:bg-neutral-900/70">
-                <div className="flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5 text-primary-6" />
-                  <h2 className="text-xl font-bold text-neutral-10">Top cửa hàng</h2>
-                </div>
-                <div className="space-y-3">
-                  {topShops.slice(0, 10).map((shop, index) => {
-                    const widthPercent =
-                      maxShopRevenue > 0
-                        ? Math.round(((shop.totalRevenue || 0) / maxShopRevenue) * 100)
-                        : 0;
-                    const shopLogoUrl = formatImageUrl(shop.shopLogo);
-                    const aov = shop.averageOrderValue || (shop.totalOrders > 0 ? Math.round(shop.totalRevenue / shop.totalOrders) : 0);
-                    return (
-                      <div
-                        key={shop.shopId}
-                        className="group relative overflow-hidden rounded-2xl border border-neutral-3/60 bg-gradient-to-r from-neutral-1/60 to-neutral-2/40 p-4 transition-all duration-300 hover:border-primary-5/50 hover:shadow-lg dark:border-neutral-8/60 dark:from-neutral-9/40 dark:to-neutral-8/30"
-                      >
-                        <div className="flex items-center gap-4">
-                          {/* Rank Badge */}
-                          <div className="flex-shrink-0">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-lg font-bold text-white shadow-md">
-                              #{index + 1}
-                            </div>
-                          </div>
-
-                          {/* Shop Logo */}
-                          <div className="flex-shrink-0">
-                            <div className="relative h-16 w-16 overflow-hidden rounded-xl border-2 border-neutral-3/40 bg-neutral-2 dark:border-neutral-8/40 dark:bg-neutral-8">
-                              {shopLogoUrl ? (
-                                <img
-                                  src={shopLogoUrl}
-                                  alt={shop.shopName}
-                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = "none";
-                                    const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
-                                    if (fallback) fallback.style.display = "flex";
-                                  }}
-                                />
-                              ) : null}
-                              <div
-                                className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-3 to-neutral-4 text-neutral-7 dark:from-neutral-8 dark:to-neutral-9 dark:text-neutral-5 ${shopLogoUrl ? "hidden" : "flex"}`}
-                              >
-                                <ShoppingBag className="h-6 w-6" />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Shop Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="truncate text-base font-bold text-neutral-10 group-hover:text-emerald-600 transition-colors">
-                                  {shop.shopName}
-                                </h3>
-                                <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-neutral-6">
-                                  <span className="flex items-center gap-1">
-                                    <DollarSign className="h-3.5 w-3.5" />
-                                    {shop.totalRevenue.toLocaleString("vi-VN")} đ
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Package className="h-3.5 w-3.5" />
-                                    {shop.totalOrders.toLocaleString("vi-VN")} đơn
-                                  </span>
-                                  {aov > 0 && (
-                                    <span className="flex items-center gap-1">
-                                      <Target className="h-3.5 w-3.5" />
-                                      AOV: {aov.toLocaleString("vi-VN")} đ
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <span className="flex-shrink-0 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
-                                Rank #{shop.rank}
-                              </span>
-                            </div>
-                            
-                            {/* Progress Bar */}
-                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-3/60 dark:bg-neutral-8/60">
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 transition-all duration-500"
-                                style={{ width: `${widthPercent}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </Card>
-            </section>
-          )}
 
           {isLoading && (
             <div className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-4 bg-background-elevated/80 px-4 py-8 text-sm text-neutral-6">
