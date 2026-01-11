@@ -169,16 +169,30 @@ const chatSlice = createSlice({
     ) => {
       state.getMessages.status = ReduxStateType.SUCCESS;
       const { conversationId, response } = action.payload;
+      // Normalize conversationId to string for consistent storage
+      const normalizedConversationId = String(conversationId);
+      
+      const previousCount = state.messages[normalizedConversationId]?.length || 0;
+      
       // Remove duplicates and sort messages
       const uniqueMessages = Array.from(
         new Map(response.messages.map((msg: any) => [msg._id, msg])).values()
       );
-      state.messages[conversationId] = uniqueMessages.sort((a: any, b: any) => {
+      state.messages[normalizedConversationId] = uniqueMessages.sort((a: any, b: any) => {
         const dateA = new Date(a.createdAt || 0).getTime();
         const dateB = new Date(b.createdAt || 0).getTime();
         return dateA - dateB;
       });
-      state.messagesPagination[conversationId] = response.pagination;
+      
+      console.log("[Chat Slice] getMessagesSuccess:", {
+        conversationId: normalizedConversationId,
+        previousMessagesCount: previousCount,
+        newMessagesCount: uniqueMessages.length,
+        addedMessages: uniqueMessages.length - previousCount,
+        messageIds: uniqueMessages.map((m: any) => m._id).slice(-5), // Last 5 message IDs
+      });
+      
+      state.messagesPagination[normalizedConversationId] = response.pagination;
       state.getMessages.error = null;
       state.getMessages.message = null;
     },
@@ -197,11 +211,22 @@ const chatSlice = createSlice({
         isSender?: boolean;
       }>
     ) => {
-      const { conversationId, message, isSender = false } = action.payload;
+      const { conversationId, message } = action.payload;
+
+      // Normalize conversationId to string for consistent comparison
+      const normalizedConversationId = String(conversationId);
+      
+      console.log("[Chat Slice] updateMessageFromSocket called:", {
+        originalConversationId: conversationId,
+        normalizedConversationId,
+        messageId: message._id,
+        messageText: message.message,
+        existingMessagesCount: state.messages[normalizedConversationId]?.length || 0,
+      });
 
       // Initialize messages array if needed
-      if (!state.messages[conversationId]) {
-        state.messages[conversationId] = [];
+      if (!state.messages[normalizedConversationId]) {
+        state.messages[normalizedConversationId] = [];
       }
 
       // Remove ALL temporary messages with same content (optimistic updates)
@@ -209,7 +234,7 @@ const chatSlice = createSlice({
       const messageTime = new Date(message.createdAt).getTime();
       const tempMessagesToRemove: number[] = [];
       
-      state.messages[conversationId].forEach((m, index) => {
+      state.messages[normalizedConversationId].forEach((m, index) => {
         if (m._id.startsWith("temp-")) {
           const tempTime = new Date(m.createdAt).getTime();
           const timeDiff = Math.abs(messageTime - tempTime);
@@ -222,17 +247,17 @@ const chatSlice = createSlice({
       
       // Remove temp messages in reverse order to maintain indices
       for (let i = tempMessagesToRemove.length - 1; i >= 0; i--) {
-        state.messages[conversationId].splice(tempMessagesToRemove[i], 1);
+        state.messages[normalizedConversationId].splice(tempMessagesToRemove[i], 1);
       }
 
       // Check if message already exists by _id
-      const existingIndex = state.messages[conversationId].findIndex(
+      const existingIndex = state.messages[normalizedConversationId].findIndex(
         (m) => m._id === message._id
       );
 
       if (existingIndex === -1) {
         // Check for duplicate by content and timestamp (within 1 second)
-        const duplicateIndex = state.messages[conversationId].findIndex((m) => {
+        const duplicateIndex = state.messages[normalizedConversationId].findIndex((m) => {
           if (m._id === message._id) return true;
           const mTime = new Date(m.createdAt).getTime();
           const timeDiff = Math.abs(messageTime - mTime);
@@ -243,22 +268,40 @@ const chatSlice = createSlice({
         
         if (duplicateIndex === -1) {
           // Add new message at the end (will be sorted by selector)
-          state.messages[conversationId].push(message);
+          state.messages[normalizedConversationId].push(message);
+          console.log("[Chat Slice] Added new message:", {
+            conversationId: normalizedConversationId,
+            messageId: message._id,
+            totalMessages: state.messages[normalizedConversationId].length,
+          });
         } else {
           // Update existing duplicate message
-          state.messages[conversationId][duplicateIndex] = message;
+          state.messages[normalizedConversationId][duplicateIndex] = message;
+          console.log("[Chat Slice] Updated duplicate message:", {
+            conversationId: normalizedConversationId,
+            messageId: message._id,
+            duplicateIndex,
+          });
         }
       } else {
         // Update existing message (preserve position)
-        state.messages[conversationId][existingIndex] = message;
+        state.messages[normalizedConversationId][existingIndex] = message;
+        console.log("[Chat Slice] Updated existing message:", {
+          conversationId: normalizedConversationId,
+          messageId: message._id,
+          existingIndex,
+        });
       }
 
       // Update conversation's last message
+      // Use String() to ensure consistent comparison (handle ObjectId vs string)
       const conversationIndex = state.conversations.findIndex(
-        (c) => c._id === conversationId
+        (c) => String(c._id) === normalizedConversationId
       );
       
-      const isCurrentlyViewing = state.currentConversation?._id === conversationId;
+      const isCurrentlyViewing = state.currentConversation?._id 
+        ? String(state.currentConversation._id) === normalizedConversationId
+        : false;
       
       if (conversationIndex !== -1) {
         state.conversations[conversationIndex].lastMessage = message;
@@ -321,7 +364,7 @@ const chatSlice = createSlice({
                 const existing =
                   existingParticipants.find(
                     (p: any) => p.userId === incoming.userId
-                  ) || {};
+                  ) || {} as any;
                 return {
                   ...existing,
                   ...incoming,
@@ -391,7 +434,7 @@ const chatSlice = createSlice({
                 const existing =
                   existingParticipants.find(
                     (p: any) => p.userId === incoming.userId
-                  ) || {};
+                  ) || {} as any;
                 return {
                   ...existing,
                   ...incoming,
@@ -404,14 +447,16 @@ const chatSlice = createSlice({
               })
             : existingParticipants;
 
-        state.currentConversation = {
-          ...state.currentConversation,
-          ...conversation,
-          participants: mergedParticipants,
-          unreadCountMe: 0, // Always reset unread count when viewing
-          unreadCountTo: unreadCountTo, // Keep unreadCountTo even when viewing
-          unreadCount: 0, // Backward compatibility
-        };
+        if (state.currentConversation) {
+          state.currentConversation = {
+            ...state.currentConversation,
+            ...conversation,
+            participants: mergedParticipants,
+            unreadCountMe: 0, // Always reset unread count when viewing
+            unreadCountTo: unreadCountTo, // Keep unreadCountTo even when viewing
+            unreadCount: 0, // Backward compatibility
+          };
+        }
       }
     },
 
@@ -425,18 +470,20 @@ const chatSlice = createSlice({
       }>
     ) => {
       const { conversationId, messages, pagination } = action.payload;
+      // Normalize conversationId to string for consistent storage
+      const normalizedConversationId = String(conversationId);
       
-      if (!state.messages[conversationId]) {
-        state.messages[conversationId] = [];
+      if (!state.messages[normalizedConversationId]) {
+        state.messages[normalizedConversationId] = [];
       }
 
       // Append messages (avoid duplicates)
-      const existingIds = new Set(state.messages[conversationId].map(m => m._id));
+      const existingIds = new Set(state.messages[normalizedConversationId].map(m => m._id));
       const newMessages = messages.filter(m => !existingIds.has(m._id));
-      state.messages[conversationId] = [...newMessages, ...state.messages[conversationId]];
+      state.messages[normalizedConversationId] = [...newMessages, ...state.messages[normalizedConversationId]];
       
       // Update pagination
-      state.messagesPagination[conversationId] = pagination;
+      state.messagesPagination[normalizedConversationId] = pagination;
     },
 
     // Send Message
@@ -454,20 +501,22 @@ const chatSlice = createSlice({
     ) => {
       state.sendMessage.status = ReduxStateType.SUCCESS;
       const { conversationId, message } = action.payload;
+      // Normalize conversationId to string for consistent storage
+      const normalizedConversationId = String(conversationId);
 
-      if (!state.messages[conversationId]) {
-        state.messages[conversationId] = [];
+      if (!state.messages[normalizedConversationId]) {
+        state.messages[normalizedConversationId] = [];
       }
 
       // Check if message already exists (avoid duplicates from socket)
-      const existingIndex = state.messages[conversationId].findIndex(
+      const existingIndex = state.messages[normalizedConversationId].findIndex(
         (m) => m._id === message._id
       );
 
       if (existingIndex === -1) {
         // Check for duplicate by content and timestamp
         const messageTime = new Date(message.createdAt).getTime();
-        const duplicateIndex = state.messages[conversationId].findIndex((m) => {
+        const duplicateIndex = state.messages[normalizedConversationId].findIndex((m) => {
           const mTime = new Date(m.createdAt).getTime();
           const timeDiff = Math.abs(messageTime - mTime);
           return m.message === message.message && 
@@ -476,19 +525,20 @@ const chatSlice = createSlice({
         });
         
         if (duplicateIndex === -1) {
-          state.messages[conversationId].push(message);
+          state.messages[normalizedConversationId].push(message);
         } else {
           // Update existing duplicate
-          state.messages[conversationId][duplicateIndex] = message;
+          state.messages[normalizedConversationId][duplicateIndex] = message;
         }
       } else {
         // Update existing message
-        state.messages[conversationId][existingIndex] = message;
+        state.messages[normalizedConversationId][existingIndex] = message;
       }
 
       // Update conversation's last message
+      // Use String() to ensure consistent comparison (handle ObjectId vs string)
       const conversationIndex = state.conversations.findIndex(
-        (c) => c._id === conversationId
+        (c) => String(c._id) === normalizedConversationId
       );
       if (conversationIndex !== -1) {
         state.conversations[conversationIndex].lastMessage = message;
@@ -513,11 +563,13 @@ const chatSlice = createSlice({
       }>
     ) => {
       const { conversationId, message } = action.payload;
+      // Normalize conversationId to string for consistent storage
+      const normalizedConversationId = String(conversationId);
       
       // Create temporary message for optimistic update
       const tempMessage: ChatMessage = {
         _id: `temp-${Date.now()}`,
-        conversationId,
+        conversationId: normalizedConversationId,
         senderId: "", // Will be updated from socket response
         message,
         isRead: false,
@@ -525,11 +577,11 @@ const chatSlice = createSlice({
         createdAt: new Date().toISOString(),
       };
 
-      if (!state.messages[conversationId]) {
-        state.messages[conversationId] = [];
+      if (!state.messages[normalizedConversationId]) {
+        state.messages[normalizedConversationId] = [];
       }
       
-      state.messages[conversationId].push(tempMessage);
+      state.messages[normalizedConversationId].push(tempMessage);
     },
 
     // Mark as Read
@@ -547,23 +599,29 @@ const chatSlice = createSlice({
     ) => {
       state.markAsRead.status = ReduxStateType.SUCCESS;
       const { conversationId } = action.payload;
+      // Normalize conversationId to string for consistent comparison
+      const normalizedConversationId = String(conversationId);
 
       // Update conversation unread count
+      // Use String() to ensure consistent comparison (handle ObjectId vs string)
       const conversationIndex = state.conversations.findIndex(
-        (c) => c._id === conversationId
+        (c) => String(c._id) === normalizedConversationId
       );
       if (conversationIndex !== -1) {
         state.conversations[conversationIndex].unreadCount = 0;
       }
 
       // Update current conversation
-      if (state.currentConversation?._id === conversationId) {
+      const isCurrentlyViewing = state.currentConversation?._id 
+        ? String(state.currentConversation._id) === normalizedConversationId
+        : false;
+      if (isCurrentlyViewing && state.currentConversation) {
         state.currentConversation.unreadCount = 0;
       }
 
       // Mark all messages as read
-      if (state.messages[conversationId]) {
-        state.messages[conversationId] = state.messages[conversationId].map(
+      if (state.messages[normalizedConversationId]) {
+        state.messages[normalizedConversationId] = state.messages[normalizedConversationId].map(
           (m) => ({ ...m, isRead: true })
         );
       }

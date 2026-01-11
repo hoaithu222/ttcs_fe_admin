@@ -15,7 +15,43 @@ export const selectCurrentConversation = createSelector(
 
 export const selectChatMessages = (conversationId: string) =>
   createSelector([selectChatState], (chatState) => {
-    const messages = chatState?.messages?.[conversationId] || [];
+    // Normalize conversationId to string for consistent lookup
+    const normalizedConversationId = String(conversationId);
+    
+    console.log("[Chat Selector] selectChatMessages called:", {
+      originalConversationId: conversationId,
+      normalizedConversationId,
+      availableKeys: chatState?.messages ? Object.keys(chatState.messages) : [],
+    });
+    
+    // Get messages directly - should work since we normalize everywhere
+    let messages = chatState?.messages?.[normalizedConversationId] || [];
+    
+    console.log("[Chat Selector] Direct lookup result:", {
+      normalizedConversationId,
+      messagesCount: messages.length,
+      messages: messages.map((m: any) => ({ id: m._id, text: m.message?.substring(0, 20) })),
+    });
+    
+    // Fallback: search all message keys if direct lookup fails (handles ObjectId vs string mismatch)
+    // This ensures we find messages even if stored with different key format
+    if (messages.length === 0 && chatState?.messages) {
+      const allKeys = Object.keys(chatState.messages);
+      console.log("[Chat Selector] Direct lookup failed, trying fallback:", {
+        normalizedConversationId,
+        allKeys,
+      });
+      for (const key of allKeys) {
+        if (String(key) === normalizedConversationId) {
+          messages = chatState.messages[key] || [];
+          console.log("[Chat Selector] Found messages with fallback:", {
+            matchedKey: key,
+            messagesCount: messages.length,
+          });
+          break;
+        }
+      }
+    }
     
     // Remove duplicates by _id first
     const uniqueById = Array.from(

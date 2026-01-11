@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useMemo, useState } from "react";
-import { X, Phone, Video } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import {
   selectCurrentConversation,
@@ -32,25 +31,31 @@ const ChatWindow: React.FC = () => {
   const dispatch = useAppDispatch();
   const currentConversation = useAppSelector(selectCurrentConversation);
   const conversations = useAppSelector(selectConversations);
-  const messages = useAppSelector((state) =>
-    currentConversation ? selectChatMessages(currentConversation._id)(state) : []
-  );
+  const messages = useAppSelector((state) => {
+    if (!currentConversation) return [];
+    const result = selectChatMessages(currentConversation._id)(state);
+    console.log("[ChatWindow] Messages selector result:", {
+      conversationId: currentConversation._id,
+      messagesCount: result.length,
+      messageIds: result.map((m: any) => m._id),
+      last5Messages: result.slice(-5).map((m: any) => ({ 
+        id: m._id, 
+        text: m.message?.substring(0, 30),
+        createdAt: m.createdAt,
+        senderId: m.senderId,
+      })),
+    });
+    return result;
+  });
   const status = useAppSelector(selectChatStatus);
   const user = useAppSelector(selectUser);
   const currentUserId = user?._id;
-  // Memoized selectors for typing/online users to avoid selector warnings and unnecessary re-renders
-  const typingUsersSelector = useMemo(
-    () => (currentConversation ? selectTypingUsers(currentConversation._id) : () => []),
-    [currentConversation?._id]
+  const typingUsers = useAppSelector((state) =>
+    currentConversation ? selectTypingUsers(currentConversation._id)(state) : []
   );
-
-  const onlineUsersSelector = useMemo(
-    () => (currentConversation ? selectOnlineUsers(currentConversation._id) : () => []),
-    [currentConversation?._id]
+  const onlineUsers = useAppSelector((state) =>
+    currentConversation ? selectOnlineUsers(currentConversation._id)(state) : []
   );
-
-  const typingUsers = useAppSelector(typingUsersSelector as any) as string[];
-  const onlineUsers = useAppSelector(onlineUsersSelector as any) as string[];
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<any>(null);
@@ -65,7 +70,7 @@ const ChatWindow: React.FC = () => {
       return;
     }
 
-    const conversationId = currentConversation._id;
+    const conversationId = String(currentConversation._id);
     dispatch(
       getMessagesStart({
         conversationId,
@@ -95,8 +100,26 @@ const ChatWindow: React.FC = () => {
       const socket = socketClient.connect();
       socketRef.current = socket;
       if (socket && socket.connected) {
+        console.log("[ChatWindow] Joining conversation room:", {
+          conversationId,
+          channel,
+          socketId: socket.id,
+          socketConnected: socket.connected,
+        });
+        
         socket.emit(SOCKET_EVENTS.CHAT_CONVERSATION_JOIN, {
           conversationId,
+        });
+        
+        // Listen for ALL socket events for debugging
+        socket.onAny((eventName, ...args) => {
+          if (eventName === SOCKET_EVENTS.CHAT_MESSAGE_RECEIVE) {
+            console.log("[ChatWindow] Socket event received in ChatWindow:", {
+              eventName,
+              conversationId,
+              payload: args[0],
+            });
+          }
         });
 
         // Listen for typing events
@@ -303,8 +326,17 @@ const ChatWindow: React.FC = () => {
         ) : (
           <ScrollView scrollRef={scrollRef} className="h-full w-full">
             <div className="p-4 pb-6">
-              {messages.map((message) => {
+              {messages.map((message, index) => {
                 const msg = message as ChatMessage;
+                // Log last 3 messages to debug
+                if (index >= messages.length - 3) {
+                  console.log(`[ChatWindow] Rendering message ${index + 1}/${messages.length}:`, {
+                    id: msg._id,
+                    text: msg.message?.substring(0, 30),
+                    senderId: msg.senderId,
+                    createdAt: msg.createdAt,
+                  });
+                }
                 return (
                   <MessageItem
                     key={msg._id}

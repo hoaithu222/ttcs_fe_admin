@@ -217,6 +217,13 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
     const shopChatSocket = socketClients.shopChat?.connect();
     if (shopChatSocket) {
       handleShopChatMessage = (payload: Record<string, any>) => {
+        console.log("[Shop Chat] Raw socket event received:", {
+          payload,
+          conversationId: payload?.conversationId,
+          hasMessage: !!payload?.message,
+          messageId: payload?._id || payload?.messageId,
+        });
+        
         // Handle both old format (flat) and new format (nested message object)
         let messageData = payload.message;
         if (!messageData && payload.conversationId) {
@@ -240,8 +247,9 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
           // Try to get senderAvatar from conversation participants if missing
           let senderAvatar = messageData.senderAvatar || payload.senderAvatar;
           if (!senderAvatar && payload.conversationId) {
+            const normalizedConvId = String(payload.conversationId);
             const conversation = conversations.find(
-              (c) => c._id === payload.conversationId
+              (c: any) => String(c._id) === normalizedConvId
             );
             if (conversation) {
               const senderId = messageData.senderId || payload.senderId;
@@ -254,9 +262,20 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
             }
           }
 
+          // Normalize conversationId to ensure consistency with store
+          const normalizedConversationId = String(payload.conversationId);
+          
+          console.log("[Shop Chat] Received message from socket:", {
+            originalConversationId: payload.conversationId,
+            normalizedConversationId,
+            messageId: messageData._id || payload.messageId || payload._id,
+            senderId: messageData.senderId || payload.senderId,
+            messageText: messageData.message || payload.message || "",
+          });
+          
           const message = {
             _id: messageData._id || payload.messageId || payload._id || generateNotificationId(),
-            conversationId: payload.conversationId,
+            conversationId: normalizedConversationId,
             senderId: messageData.senderId || payload.senderId || "",
             senderName: messageData.senderName || payload.senderName,
             senderAvatar: senderAvatar,
@@ -268,9 +287,15 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
             createdAt: messageData.createdAt || payload.sentAt || payload.createdAt || new Date().toISOString(),
           };
 
+          console.log("[Shop Chat] Dispatching updateMessageFromSocket:", {
+            conversationId: normalizedConversationId,
+            messageId: message._id,
+            messageText: message.message,
+          });
+
           dispatch(
             updateMessageFromSocket({
-              conversationId: payload.conversationId,
+              conversationId: normalizedConversationId,
               message,
               isSender: message.senderId === authUser?._id,
             })
@@ -288,7 +313,36 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
       };
 
       handleShopConversationUpdate = (payload: Record<string, any>) => {
-        console.log("[Shop Chat] Conversation update received:", payload);
+        const conversationId = payload?.conversationId || payload?.conversation?._id;
+        const lastMessage = payload?.conversation?.lastMessage || payload?.lastMessage;
+        const rootMessage = payload?.message;
+        
+        console.log("[Shop Chat] Conversation update received:", {
+          payload,
+          hasConversation: !!payload?.conversation,
+          hasMessage: !!rootMessage,
+          hasLastMessage: !!lastMessage,
+          conversationId,
+          lastMessage,
+          messageInPayload: rootMessage,
+        });
+        
+        // Check if message is in the payload root (not nested in conversation)
+        if (rootMessage && conversationId && handleShopChatMessage) {
+          console.log("[Shop Chat] Found message in root payload, dispatching updateMessageFromSocket");
+          handleShopChatMessage(payload);
+        }
+        // Check if message is in conversation.lastMessage
+        else if (lastMessage && conversationId && handleShopChatMessage) {
+          console.log("[Shop Chat] Found message in conversation.lastMessage, dispatching updateMessageFromSocket");
+          // Create a payload-like object with message at root level for handleShopChatMessage
+          handleShopChatMessage({
+            ...payload,
+            message: lastMessage,
+            conversationId,
+          });
+        }
+        
         if (payload?.conversation) {
           dispatch(
             updateConversationFromSocket({
@@ -300,14 +354,37 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
         }
       };
 
+      console.log("[Shop Chat] Setting up socket listeners");
       shopChatSocket.on(SOCKET_EVENTS.CHAT_MESSAGE_RECEIVE, handleShopChatMessage);
       shopChatSocket.on(SOCKET_EVENTS.CHAT_CONVERSATION_JOIN, handleShopConversationUpdate);
+      
+      // Debug: listen to all events
+      shopChatSocket.onAny((eventName, ...args) => {
+        if (eventName.includes('message') || eventName.includes('chat')) {
+          const firstArg = args[0] || {};
+          console.log("[Shop Chat] Any socket event:", { 
+            eventName, 
+            argsCount: args.length,
+            firstArg,
+            hasMessage: !!firstArg?.message,
+            hasLastMessage: !!firstArg?.conversation?.lastMessage,
+            lastMessage: firstArg?.conversation?.lastMessage,
+          });
+        }
+      });
     }
 
     // Handle admin chat messages
     const adminChatSocket = socketClients.adminChat?.connect();
     if (adminChatSocket) {
       handleAdminChatMessage = (payload: Record<string, any>) => {
+        console.log("[Admin Chat] Raw socket event received:", {
+          payload,
+          conversationId: payload?.conversationId,
+          hasMessage: !!payload?.message,
+          messageId: payload?._id || payload?.messageId,
+        });
+        
         // Handle both old format (flat) and new format (nested message object)
         let messageData = payload.message;
         if (!messageData && payload.conversationId) {
@@ -331,8 +408,9 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
           // Try to get senderAvatar from conversation participants if missing
           let senderAvatar = messageData.senderAvatar || payload.senderAvatar;
           if (!senderAvatar && payload.conversationId) {
+            const normalizedConvId = String(payload.conversationId);
             const conversation = conversations.find(
-              (c) => c._id === payload.conversationId
+              (c: any) => String(c._id) === normalizedConvId
             );
             if (conversation) {
               const senderId = messageData.senderId || payload.senderId;
@@ -345,9 +423,20 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
             }
           }
 
+          // Normalize conversationId to ensure consistency with store
+          const normalizedConversationId = String(payload.conversationId);
+          
+          console.log("[Admin Chat] Received message from socket:", {
+            originalConversationId: payload.conversationId,
+            normalizedConversationId,
+            messageId: messageData._id || payload.messageId || payload._id,
+            senderId: messageData.senderId || payload.senderId,
+            messageText: messageData.message || payload.message || "",
+          });
+          
           const message = {
             _id: messageData._id || payload.messageId || payload._id || generateNotificationId(),
-            conversationId: payload.conversationId,
+            conversationId: normalizedConversationId,
             senderId: messageData.senderId || payload.senderId || "",
             senderName: messageData.senderName || payload.senderName,
             senderAvatar: senderAvatar,
@@ -359,9 +448,15 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
             createdAt: messageData.createdAt || payload.sentAt || payload.createdAt || new Date().toISOString(),
           };
 
+          console.log("[Admin Chat] Dispatching updateMessageFromSocket:", {
+            conversationId: normalizedConversationId,
+            messageId: message._id,
+            messageText: message.message,
+          });
+
           dispatch(
             updateMessageFromSocket({
-              conversationId: payload.conversationId,
+              conversationId: normalizedConversationId,
               message,
               isSender: message.senderId === authUser?._id,
             })
@@ -379,7 +474,36 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
       };
 
       handleAdminConversationUpdate = (payload: Record<string, any>) => {
-        console.log("[Admin Chat] Conversation update received:", payload);
+        const conversationId = payload?.conversationId || payload?.conversation?._id;
+        const lastMessage = payload?.conversation?.lastMessage || payload?.lastMessage;
+        const rootMessage = payload?.message;
+        
+        console.log("[Admin Chat] Conversation update received:", {
+          payload,
+          hasConversation: !!payload?.conversation,
+          hasMessage: !!rootMessage,
+          hasLastMessage: !!lastMessage,
+          conversationId,
+          lastMessage,
+          messageInPayload: rootMessage,
+        });
+        
+        // Check if message is in the payload root (not nested in conversation)
+        if (rootMessage && conversationId && handleAdminChatMessage) {
+          console.log("[Admin Chat] Found message in root payload, dispatching updateMessageFromSocket");
+          handleAdminChatMessage(payload);
+        }
+        // Check if message is in conversation.lastMessage
+        else if (lastMessage && conversationId && handleAdminChatMessage) {
+          console.log("[Admin Chat] Found message in conversation.lastMessage, dispatching updateMessageFromSocket");
+          // Create a payload-like object with message at root level for handleAdminChatMessage
+          handleAdminChatMessage({
+            ...payload,
+            message: lastMessage,
+            conversationId,
+          });
+        }
+        
         if (payload?.conversation) {
           dispatch(
             updateConversationFromSocket({
@@ -393,8 +517,24 @@ const RealtimeProvider = ({ children }: PropsWithChildren) => {
         }
       };
 
+      console.log("[Admin Chat] Setting up socket listeners");
       adminChatSocket.on(SOCKET_EVENTS.CHAT_MESSAGE_RECEIVE, handleAdminChatMessage);
       adminChatSocket.on(SOCKET_EVENTS.CHAT_CONVERSATION_JOIN, handleAdminConversationUpdate);
+      
+      // Debug: listen to all events
+      adminChatSocket.onAny((eventName, ...args) => {
+        if (eventName.includes('message') || eventName.includes('chat')) {
+          const firstArg = args[0] || {};
+          console.log("[Admin Chat] Any socket event:", { 
+            eventName, 
+            argsCount: args.length,
+            firstArg,
+            hasMessage: !!firstArg?.message,
+            hasLastMessage: !!firstArg?.conversation?.lastMessage,
+            lastMessage: firstArg?.conversation?.lastMessage,
+          });
+        }
+      });
     }
 
     return () => {
