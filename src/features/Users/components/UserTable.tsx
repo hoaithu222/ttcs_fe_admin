@@ -222,38 +222,38 @@ const UserTable: React.FC<UserTableProps> = ({
       },
       size: 250,
     },
-    {
-      id: "isEmailVerified",
-      header: "Xác thực Email",
-      accessorKey: "isEmailVerified",
-      cell: (info) => {
-        const isEmailVerified = info.getValue() as boolean;
-        return (
-          <div className="flex justify-center">
-            <Chip
-              colorClass={
-                isEmailVerified
-                  ? "bg-primary-6 text-white border-none"
-                  : "bg-neutral-4 text-neutral-10 border-none"
-              }
-              className="shadow-sm transition-all duration-200 hover:shadow-md"
-              rounded="full"
-              size="sm"
-            >
-              <span className="flex items-center gap-1.5">
-                <span className="text-xs">{isEmailVerified ? "✓" : "✗"}</span>
-                <span>{isEmailVerified ? "Đã xác thực" : "Chưa xác thực"}</span>
-              </span>
-            </Chip>
-          </div>
-        );
-      },
-      meta: {
-        className: "text-center",
-        align: "text-center",
-      },
-      size: 180,
-    },
+    // {
+    //   id: "isEmailVerified",
+    //   header: "Xác thực Email",
+    //   accessorKey: "isEmailVerified",
+    //   cell: (info) => {
+    //     const isEmailVerified = info.getValue() as boolean;
+    //     return (
+    //       <div className="flex justify-center">
+    //         <Chip
+    //           colorClass={
+    //             isEmailVerified
+    //               ? "bg-primary-6 text-white border-none"
+    //               : "bg-neutral-4 text-neutral-10 border-none"
+    //           }
+    //           className="shadow-sm transition-all duration-200 hover:shadow-md"
+    //           rounded="full"
+    //           size="sm"
+    //         >
+    //           <span className="flex items-center gap-1.5">
+    //             <span className="text-xs">{isEmailVerified ? "✓" : "✗"}</span>
+    //             <span>{isEmailVerified ? "Đã xác thực" : "Chưa xác thực"}</span>
+    //           </span>
+    //         </Chip>
+    //       </div>
+    //     );
+    //   },
+    //   meta: {
+    //     className: "text-center",
+    //     align: "text-center",
+    //   },
+    //   size: 180,
+    // },
     {
       id: "actions",
       header: "Thao tác",
