@@ -197,9 +197,9 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
         <div ref={regionRef} data-testid={testId} className="w-full">
           {/* Label */}
           {label && (
-            <Form.Label htmlFor={inputId} className="block text-body-13 text-neutral-9">
+            <Form.Label htmlFor={inputId} className="block text-body-13 text-neutral-9 mb-2">
               {label}
-              {props.required && <span className="text-red-5">*</span>}
+              {props.required && <span className="text-red-500">*</span>}
             </Form.Label>
           )}
 
